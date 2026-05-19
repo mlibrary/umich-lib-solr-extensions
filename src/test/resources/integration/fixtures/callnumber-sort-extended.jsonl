@@ -1,0 +1,9 @@
+{"id":"sort-lc-a",    "callnumber_sort":"A1 .B2 1900",            "callnumber_sortable":"A1 .B2 1900"}
+{"id":"sort-lc-b",    "callnumber_sort":"PS3537.A832 B6 1948",     "callnumber_sortable":"PS3537.A832 B6 1948"}
+{"id":"sort-lc-c",    "callnumber_sort":"QA76.73.J38 G67 2018",    "callnumber_sortable":"QA76.73.J38 G67 2018"}
+{"id":"sort-lc-d",    "callnumber_sort":"ZZ999 .Z99 9999",          "callnumber_sortable":"ZZ999 .Z99 9999"}
+{"id":"sort-dewey-a", "callnumber_sort":"100 ABC",                  "callnumber_sortable":"100 ABC"}
+{"id":"sort-dewey-b", "callnumber_sort":"813.54 SAL",               "callnumber_sortable":"813.54 SAL"}
+{"id":"sort-dewey-c", "callnumber_sort":"999.9 ZZZ",                "callnumber_sortable":"999.9 ZZZ"}
+{"id":"sort-trunc-a", "callnumber_sort":"A",                        "callnumber_sortable":"A"}
+{"id":"sort-trunc-b", "callnumber_sort":"PS",                       "callnumber_sortable":"PS"}
