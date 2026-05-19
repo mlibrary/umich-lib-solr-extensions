@@ -20,3 +20,5 @@ target/
 
 # OpenCode
 .opencode/
+/.agentbridge/
+/out/
