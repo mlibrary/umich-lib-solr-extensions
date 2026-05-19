@@ -19,9 +19,30 @@ class AnyCallNumberSimpleTest {
 
     @Test
     void valid_truncated_key() {
+        // Letters-only LC stub — valid truncated via LC sub-object
+        AnyCallNumberSimple lcTruncated = new AnyCallNumberSimple("AB");
+        assertFalse(lcTruncated.hasValidKey(), "pure letters should not be a full valid key");
+        assertTrue(lcTruncated.hasAcceptableTruncatedKey(), "pure letters should be an acceptable truncated key");
+        assertEquals("ab", lcTruncated.acceptableTruncatedKey());
+
+        // Fully invalid input — no truncated key available
+        AnyCallNumberSimple neither = new AnyCallNumberSimple("8AB");
+        assertFalse(neither.hasValidKey());
+        assertFalse(neither.hasAcceptableTruncatedKey());
+        assertNull(neither.acceptableTruncatedKey());
     }
 
     @Test
     void invalid_key() {
+        // invalidKey() delegates to LCCallNumberSimple.invalidKey(), which lowercases
+        // and inserts a space between a digit and a following letter
+        AnyCallNumberSimple acn = new AnyCallNumberSimple("8AB");
+        assertFalse(acn.hasValidKey());
+        assertNotNull(acn.invalidKey());
+        assertEquals("8 ab", acn.invalidKey());
+
+        // A fully garbage string still produces a non-null invalid key
+        AnyCallNumberSimple garbage = new AnyCallNumberSimple("???");
+        assertNotNull(garbage.invalidKey());
     }
 }
