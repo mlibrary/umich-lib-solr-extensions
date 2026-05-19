@@ -93,11 +93,6 @@ The class-level Javadoc covers the contract, but the method itself has no Javado
 
 ## Class Design
 
-### #3 — `AbstractCallNumber.bestKey(Boolean, Boolean)` uses boxed `Boolean` parameters
+### #3 — ~~`AbstractCallNumber.bestKey(Boolean, Boolean)` uses boxed `Boolean` parameters~~ ✓ Done
 
-**File:** `src/main/java/edu/umich/lib/normalize/callnumber/AbstractCallNumber.java:79`
-
-Parameters are `Boolean` (boxed) rather than `boolean` (primitive). Boxed booleans can be
-`null`, causing `NullPointerException` on auto-unboxing.
-
-**Action:** Change parameter types to primitive `boolean`.
+Changed to primitive `boolean` parameters.
