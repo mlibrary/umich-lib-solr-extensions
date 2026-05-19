@@ -177,12 +177,39 @@ Note that `"and"` also starts with `"a"`, so it is uppercased alongside `"apples
 
 ## Reading extra parameters from schema.xml
 
-Any attribute on the `<filter>` element is available inside the filter via `getArg`:
+Any attribute on the `<filter>` element is available inside the filter constructor via two
+`protected` methods inherited from `SimpleFilter`
+([`SimpleFilter.java`](src/main/java/edu/umich/lib/solr/filter/SimpleFilter.java#L96-L116)):
 
 | Method | Behaviour |
 |--------|-----------|
-| `getArg("key")` | Returns the value; throws `IllegalArgumentException` if absent |
-| `getArg("key", "default")` | Returns the value, or `"default"` if absent; never returns `null` |
+| `getArg("key")` | Returns the `String` value; throws `IllegalArgumentException` if absent |
+| `getArg("key", "default")` | Returns the `String` value, or `"default"` if absent; never `null` |
+
+All schema.xml attribute values arrive as `String`. Convert to other types in the constructor:
+
+```java
+// boolean
+boolean reverse   = Boolean.parseBoolean(getArg("reverse", "false"));
+
+// int
+int maxLength     = Integer.parseInt(getArg("maxLength", "256"));
+
+// long
+long threshold    = Long.parseLong(getArg("threshold", "0"));
+
+// double
+double minScore   = Double.parseDouble(getArg("minScore", "0.5"));
+
+// single char  (validate length == 1 yourself)
+char letter       = getArg("letter").charAt(0);
+
+// compiled regex Pattern
+Pattern separator = Pattern.compile(getArg("separator", "\\s+"));
+
+// enum
+MyMode mode       = MyMode.valueOf(getArg("mode", "STRICT").toUpperCase());
+```
 
 `echoInvalidInput` is consumed by `SimpleFilterFactory` and does **not** appear in
 `getFilterArgs()` / `getArg`. All other attributes are forwarded.
