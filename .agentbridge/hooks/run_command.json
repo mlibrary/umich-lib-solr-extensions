@@ -1,0 +1,1 @@
+{"permission":[{"script":"scripts/run-command-abuse.sh","rejectOnFailure":true,"timeout":10}]}

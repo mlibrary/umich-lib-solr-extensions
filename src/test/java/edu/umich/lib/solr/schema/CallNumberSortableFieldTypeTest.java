@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *   <li>Gate logic: the {@code hasSomeKeyAtAll} predicate (package-visible via subclass
  *       reflection) drives whether {@code createField} returns {@code null}; we verify
  *       the underlying {@link AnyCallNumberSimple} state that drives those decisions.</li>
- *   <li>Configuration: {@code allowTruncated} and {@code passThroughOnError} behave as
+ *   <li>Configuration: {@code allowTruncated} and {@code echoInvalidInput} behave as
  *       documented.</li>
  * </ul>
  */
@@ -36,7 +36,7 @@ class CallNumberSortableFieldTypeTest {
     @BeforeEach
     void setUp() {
         fieldType = new CallNumberSortableFieldType();
-        // Default config: allowTruncated=true, passThroughOnError=false
+        // Default config: allowTruncated=true, echoInvalidInput=false
     }
 
     // -----------------------------------------------------------------------
@@ -88,7 +88,7 @@ class CallNumberSortableFieldTypeTest {
     //
     // createField() skips (returns null) when hasSomeKeyAtAll() is false.
     // That condition holds when:
-    //   !hasValidKey && !passThroughOnError && !(allowTruncated && hasAcceptableTruncatedKey)
+    //   !hasValidKey && !echoInvalidInput && !(allowTruncated && hasAcceptableTruncatedKey)
     //
     // We verify the underlying AnyCallNumberSimple state so we can be confident about
     // which inputs will be dropped by createField() in the live IT.
@@ -122,22 +122,22 @@ class CallNumberSortableFieldTypeTest {
         }
 
         @Test
-        @DisplayName("fully invalid input: no valid or truncated key → field will be skipped (passThroughOnError=false)")
+        @DisplayName("fully invalid input: no valid or truncated key → field will be skipped (echoInvalidInput=false)")
         void invalidInputSkipped() {
             AnyCallNumberSimple cn = new AnyCallNumberSimple("!@#$%");
             assertFalse(cn.hasValidKey());
             assertFalse(cn.hasAcceptableTruncatedKey());
             // toInternal returns null for this input with default config
             assertNull(fieldType.toInternal("!@#$%"),
-                "invalid input with passThroughOnError=false should produce null sort key");
+                "invalid input with echoInvalidInput=false should produce null sort key");
         }
 
         @Test
-        @DisplayName("passThroughOnError=true: invalid input still produces a sort key → field will be created")
-        void passThroughOnErrorCreatesKey() {
-            fieldType.passThroughOnError = true;
+        @DisplayName("echoInvalidInput=true: invalid input still produces a sort key → field will be created")
+        void echoInvalidInputCreatesKey() {
+            fieldType.echoInvalidInput = true;
             assertNotNull(fieldType.toInternal("!@#$%"),
-                "passThroughOnError=true should produce a non-null key for garbage input");
+                "echoInvalidInput=true should produce a non-null key for garbage input");
         }
 
         @Test

@@ -17,7 +17,7 @@ import java.lang.invoke.MethodHandles;
  * {@code toInternal()} normalization.
  *
  * <p>Returns {@code null} (skipping the field) when the call number cannot produce any
- * usable key and {@code passThroughOnError} is {@code false}.
+ * usable key and {@code echoInvalidInput} is {@code false}.
  *
  * @author Bill Dueber dueberb@umich.edu
  */
@@ -26,7 +26,7 @@ public class CallNumberSortableFieldType extends CallNumberSortKeyFieldType {
 
   private boolean hasSomeKeyAtAll(AnyCallNumberSimple cn) {
     if (cn.hasValidKey()) return true;
-    if (passThroughOnError) return true;
+    if (echoInvalidInput) return true;
     if (allowTruncated && cn.hasAcceptableTruncatedKey()) return true;
     return false;
   }

@@ -15,7 +15,7 @@ import java.util.Map;
  * <ul>
  *   <li>{@code allowTruncated} (boolean, default {@code false}) — when {@code true},
  *       truncated call number keys are accepted.</li>
- *   <li>{@code passThroughOnError} (boolean, default {@code false}) — when {@code true},
+ *   <li>{@code echoInvalidInput} (boolean, default {@code false}) — when {@code true},
  *       tokens that cannot be parsed as an LC call number are passed through unchanged.</li>
  * </ul>
  *
@@ -24,12 +24,12 @@ import java.util.Map;
  * <fieldType name="text_lccallnumber" class="solr.TextField">
  *   <analyzer type="index">
  *     <tokenizer class="solr.KeywordTokenizerFactory"/>
- *     <filter class="lcCallNumberNormalizer" passThroughOnError="true"/>
+ *     <filter class="lcCallNumberNormalizer" echoInvalidInput="true"/>
  *     <filter class="solr.EdgeNGramFilterFactory" maxGramSize="40" minGramSize="2"/>
  *   </analyzer>
  *   <analyzer type="query">
  *     <tokenizer class="solr.KeywordTokenizerFactory"/>
- *     <filter class="lcCallNumberNormalizer" passThroughOnError="true"/>
+ *     <filter class="lcCallNumberNormalizer" echoInvalidInput="true"/>
  *   </analyzer>
  * </fieldType>
  * }</pre>

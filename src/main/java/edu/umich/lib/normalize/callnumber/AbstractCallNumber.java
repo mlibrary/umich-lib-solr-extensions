@@ -81,10 +81,10 @@ public abstract class AbstractCallNumber {
     }
 
 
-    public String bestKey(boolean allowTruncated, boolean passThroughOnError) {
+    public String bestKey(boolean allowTruncated, boolean echoInvalidInput) {
         if (hasValidKey()) return validKey();
         if (allowTruncated && hasAcceptableTruncatedKey()) return acceptableTruncatedKey();
-        if (passThroughOnError) return invalidKey();
+        if (echoInvalidInput) return invalidKey();
         return null;
     }
 

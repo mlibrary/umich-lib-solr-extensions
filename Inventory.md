@@ -21,21 +21,21 @@ Dewey call numbers without the caller needing to know which scheme is in use. Us
 need to display the raw call number (e.g., a browseable call-number field). Fields are typically
 `multiValued="true"` to support records with multiple call numbers.
 
-`passThroughOnError="true"` keeps records that have unrecognizable call numbers — the raw value is
+`echoInvalidInput="true"` keeps records that have unrecognizable call numbers — the raw value is
 stored/indexed as-is, which keeps the record visible but may produce unexpected sort order.
-`passThroughOnError="false"` (the default) silently omits the field for unrecognizable values.
+`echoInvalidInput="false"` (the default) silently omits the field for unrecognizable values.
 
 ```xml
 <!-- Lenient: unrecognised call numbers pass through as raw strings -->
 <fieldType name="callnumber_sortable"
            class="edu.umich.lib.solr.schema.CallNumberSortableFieldType"
-           allowTruncated="true" passThroughOnError="true"
+           allowTruncated="true" echoInvalidInput="true"
            multiValued="true" stored="true"/>
 
 <!-- Strict: unrecognised call numbers produce no field at all -->
 <fieldType name="callnumber_sortable_strict"
            class="edu.umich.lib.solr.schema.CallNumberSortableFieldType"
-           allowTruncated="false" passThroughOnError="false"
+           allowTruncated="false" echoInvalidInput="false"
            multiValued="true" stored="true"/>
 
 <field name="callnumber" type="callnumber_sortable" indexed="true" stored="true"/>
@@ -54,7 +54,7 @@ alongside a stored display field.
 <!-- The sort key is what gets stored AND indexed -->
 <fieldType name="callnumber_sortkey"
            class="edu.umich.lib.solr.schema.CallNumberSortKeyFieldType"
-           allowTruncated="true" passThroughOnError="false"
+           allowTruncated="true" echoInvalidInput="false"
            multiValued="true" stored="true"/>
 
 <field name="callnumber_sort" type="callnumber_sortkey" indexed="true" stored="true"/>
@@ -95,13 +95,13 @@ analyzer just normalizes the prefix query without generating grams:
   <analyzer type="index">
     <tokenizer class="solr.KeywordTokenizerFactory"/>
     <filter class="edu.umich.lib.solr.filter.AnyCallNumberNormalizerFilterFactory"
-            passThroughOnError="false"/>
+            echoInvalidInput="false"/>
     <filter class="solr.EdgeNGramFilterFactory" minGramSize="1" maxGramSize="40"/>
   </analyzer>
   <analyzer type="query">
     <tokenizer class="solr.KeywordTokenizerFactory"/>
     <filter class="edu.umich.lib.solr.filter.AnyCallNumberNormalizerFilterFactory"
-            passThroughOnError="true" allowTruncated="true"/>
+            echoInvalidInput="true" allowTruncated="true"/>
   </analyzer>
 </fieldType>
 ```

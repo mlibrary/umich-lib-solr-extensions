@@ -15,8 +15,7 @@ import java.util.Map;
  *
  * <p>Tokens that cannot be parsed as a Dewey call number return {@code null}
  * from {@link #munge(String)}, which causes {@link SimpleFilter} to either
- * drop the token or echo it unchanged, depending on the {@code echoInvalidInput}
- * (schema.xml: {@code passThroughOnError}) setting.
+ * drop the token or echo it unchanged, depending on the {@code echoInvalidInput} setting.
  *
  * @author Bill Dueber dueberb@umich.edu
  */
@@ -32,8 +31,7 @@ public final class DeweyCallNumberNormalizerFilter extends SimpleFilter {
      *
      * @param in               the upstream token stream
      * @param echoInvalidInput when {@code true}, tokens that cannot be parsed
-     *                         are passed through unchanged (schema.xml:
-     *                         {@code passThroughOnError})
+     *                         are passed through unchanged
      * @param args             all schema.xml attributes forwarded from the factory
      */
     public DeweyCallNumberNormalizerFilter(TokenStream in,

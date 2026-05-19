@@ -19,7 +19,7 @@
      will store the value as given, and index a value that is suitable
      for exact matches (callnumber:"QA 11.2 .C3"), range queries
      (callnumber:[* TO "QA 11.2 .C3"]), and sorting (if single-valued). It
-     takes an argument "passThroughOnError" (default: false) to determine
+     takes an argument "echoInvalidInput" (default: false) to determine
      whether or not to ignore (default) or pass through normalized values that don't
      look like call numbers.
    * `edu.umich.lib.solr.schema.CallNumberSortKeyFieldType`
@@ -33,12 +33,12 @@
 
 
 <!-- For sorting and range queries. Stored is what you send it, indexed is the sortable key -->
-<fieldType name="any_callnumber" class="edu.umich.lib.solr.schema.CallNumberSortableFieldType" passThroughOnError="true" docValues="false" multiValued="true" stored="true"/>
+<fieldType name="any_callnumber" class="edu.umich.lib.solr.schema.CallNumberSortableFieldType" echoInvalidInput="true" docValues="false" multiValued="true" stored="true"/>
 
 <fieldType name="any_callnumber_strict" class="edu.umich.lib.solr.schema.CallNumberSortableFieldType" docValues="false" multiValued="true" stored="true"/>
 
 <!-- As above, but the index sort key is what's exposed as the stored version, too -->
-<fieldType name="any_callnumber_sort_key" class="edu.umich.lib.solr.schema.CallNumberSortKeyFieldType" passThroughOnError="true" docValues="false" multiValued="true" stored="true"/>
+<fieldType name="any_callnumber_sort_key" class="edu.umich.lib.solr.schema.CallNumberSortKeyFieldType" echoInvalidInput="true" docValues="false" multiValued="true" stored="true"/>
 
 <fieldType name="any_callnumber_sort_key_strict" class="edu.umich.lib.solr.schema.CallNumberSortKeyFieldType" docValues="false" multiValued="true" stored="true"/>
 
@@ -48,13 +48,13 @@
 <analyzer type="index">
   <tokenizer class="solr.KeywordTokenizerFactory"/>
   <filter class="solr.ICUFoldingFilterFactory"/>
-  <filter class="edu.umich.lib.solr.filter.AnyCallNumberNormalizerFilterFactory" passThroughOnError="false"/>
+  <filter class="edu.umich.lib.solr.filter.AnyCallNumberNormalizerFilterFactory" echoInvalidInput="false"/>
   <filter class="solr.EdgeNGramFilterFactory" maxGramSize="40" minGramSize="1"/>
 </analyzer>
 <analyzer type="query">
   <tokenizer class="solr.KeywordTokenizerFactory"/>
   <filter class="solr.ICUFoldingFilterFactory"/>
-  <filter class="edu.umich.lib.solr.filter.AnyCallNumberNormalizerFilterFactory" passThroughOnError="true"/>
+  <filter class="edu.umich.lib.solr.filter.AnyCallNumberNormalizerFilterFactory" echoInvalidInput="true"/>
 </analyzer>
 </fieldType>
 

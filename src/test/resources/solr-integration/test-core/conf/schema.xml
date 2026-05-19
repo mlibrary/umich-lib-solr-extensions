@@ -26,7 +26,7 @@
   CallNumberSortKeyFieldType / CallNumberSortableFieldType
     Both extend StrField; createField() normalises the value to a
     collation sort key via AnyCallNumberSimple. Attributes allowTruncated
-    and passThroughOnError control fallback behaviour.
+    and echoInvalidInput control fallback behaviour.
 -->
 <schema name="umich-ext-test" version="1.6">
 
@@ -96,10 +96,10 @@
   <!-- Call-number FieldType implementations (createField does the normalisation). -->
 
   <fieldType name="callnumber_sortkey"  class="edu.umich.lib.solr.schema.CallNumberSortKeyFieldType"
-             allowTruncated="true" passThroughOnError="false"/>
+             allowTruncated="true" echoInvalidInput="false"/>
 
   <fieldType name="callnumber_sortable" class="edu.umich.lib.solr.schema.CallNumberSortableFieldType"
-             allowTruncated="true" passThroughOnError="false"/>
+             allowTruncated="true" echoInvalidInput="false"/>
 
   <!-- AnalyzedString: stores values pre-normalized through a reference TextField's
        index analysis chain. Useful for range queries on browse fields. -->

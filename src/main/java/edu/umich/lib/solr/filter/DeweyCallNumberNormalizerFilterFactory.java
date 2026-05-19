@@ -15,7 +15,7 @@ import java.util.Map;
  * <ul>
  *   <li>{@code allowTruncated} (boolean, default {@code false}) — when {@code true},
  *       truncated call number keys are accepted.</li>
- *   <li>{@code passThroughOnError} (boolean, default {@code false}) — when {@code true},
+ *   <li>{@code echoInvalidInput} (boolean, default {@code false}) — when {@code true},
  *       tokens that cannot be parsed as a Dewey call number are passed through unchanged.</li>
  * </ul>
  *

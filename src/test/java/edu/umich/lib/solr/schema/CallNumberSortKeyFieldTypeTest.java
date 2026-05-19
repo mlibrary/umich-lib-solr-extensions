@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * <p>{@code toInternal()} and {@code bundledFields()} are pure logic that does not
  * require a live Solr container.  We instantiate the field type directly and rely on
- * its default configuration ({@code allowTruncated=true}, {@code passThroughOnError=false}).
+ * its default configuration ({@code allowTruncated=true}, {@code echoInvalidInput=false}).
  */
 @DisplayName("CallNumberSortKeyFieldType")
 class CallNumberSortKeyFieldTypeTest {
@@ -24,7 +24,7 @@ class CallNumberSortKeyFieldTypeTest {
     @BeforeEach
     void setUp() {
         fieldType = new CallNumberSortKeyFieldType();
-        // Default config: allowTruncated=true, passThroughOnError=false
+        // Default config: allowTruncated=true, echoInvalidInput=false
     }
 
     // -----------------------------------------------------------------------
@@ -185,17 +185,17 @@ class CallNumberSortKeyFieldTypeTest {
         @Test
         @DisplayName("letters-only Dewey-matching input not parseable as truncated returns null")
         void invalidInputReturnsNull() {
-            // Fully unparseable, passThroughOnError=false → null
+            // Fully unparseable, echoInvalidInput=false → null
             assertNull(fieldType.toInternal("!@#$%"));
         }
 
         @Test
-        @DisplayName("passThroughOnError=true returns invalidKey for unparseable input")
-        void passThroughOnError() {
+        @DisplayName("echoInvalidInput=true returns invalidKey for unparseable input")
+        void echoInvalidInput() {
             CallNumberSortKeyFieldType lenient = new CallNumberSortKeyFieldType();
-            lenient.passThroughOnError = true;
+            lenient.echoInvalidInput = true;
             assertNotNull(lenient.toInternal("!@#$%"),
-                "passThroughOnError=true should return a non-null key even for garbage input");
+                "echoInvalidInput=true should return a non-null key even for garbage input");
         }
 
         @Test

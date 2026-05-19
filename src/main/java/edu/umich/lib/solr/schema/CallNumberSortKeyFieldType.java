@@ -12,7 +12,7 @@ import java.util.Map;
 public class CallNumberSortKeyFieldType extends StrField {
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
   protected Boolean allowTruncated = true;
-  protected Boolean passThroughOnError = false;
+  protected Boolean echoInvalidInput = false;
 
   // Field delimiter sorts last
   private static final String FIELD_DELIMITER = "}";
@@ -27,9 +27,9 @@ public class CallNumberSortKeyFieldType extends StrField {
     if (trunc != null) {
       allowTruncated = true;
     }
-    String ptoe = args.remove("passThroughOnError");
+    String ptoe = args.remove("echoInvalidInput");
     if (ptoe != null) {
-      passThroughOnError = Boolean.parseBoolean(ptoe);
+      echoInvalidInput = Boolean.parseBoolean(ptoe);
     }
 
   }
@@ -54,7 +54,7 @@ public class CallNumberSortKeyFieldType extends StrField {
     }
 
     // Not valid at all, so if we're not passing through, return null.
-    if (passThroughOnError) {
+    if (echoInvalidInput) {
       return bundledFields(cn.invalidKey(), appendedFields);
     } else {
       return null;

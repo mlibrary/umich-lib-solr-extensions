@@ -28,9 +28,9 @@ import org.junit.jupiter.api.TestInstance;
  *   <li>Ascending and descending sort ordering across LC and Dewey call numbers.</li>
  *   <li>Mixed LC/Dewey corpora sorted together.</li>
  *   <li>Truncated-key inputs (letters-only stubs).</li>
- *   <li>{@code passThroughOnError} behaviour for invalid input.</li>
+ *   <li>{@code echoInvalidInput} behaviour for invalid input.</li>
  *   <li>{@code CallNumberSortableFieldType} stores the original display value.</li>
- *   <li>Invalid input is dropped (field absent) when {@code passThroughOnError=false}.</li>
+ *   <li>Invalid input is dropped (field absent) when {@code echoInvalidInput=false}.</li>
  * </ul>
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -160,7 +160,7 @@ class CallNumberSortLiveIT extends AbstractLiveIT {
     // -----------------------------------------------------------------------
 
     @Nested
-    @DisplayName("invalid / unparseable input (passThroughOnError=false)")
+    @DisplayName("invalid / unparseable input (echoInvalidInput=false)")
     class InvalidInputTests {
 
         @Test
@@ -179,7 +179,7 @@ class CallNumberSortLiveIT extends AbstractLiveIT {
                     .setFields("callnumber_sort", "callnumber_sortable").setRows(1));
                 assertEquals(1, resp.getResults().getNumFound());
                 SolrDocument result = resp.getResults().get(0);
-                // passThroughOnError=false → field should not be stored/indexed
+                // echoInvalidInput=false → field should not be stored/indexed
                 assertNull(result.getFieldValue("callnumber_sort"),
                     "callnumber_sort should be absent for invalid input");
                 // CallNumberSortableFieldType also skips when hasSomeKeyAtAll=false
