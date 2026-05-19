@@ -1,4 +1,4 @@
-package edu.umich.lib.solr;
+package edu.umich.lib.solr.testing;
 
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
@@ -10,6 +10,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Legacy token-stream test helpers.
+ *
+ * @deprecated Use {@link TokenStreamAsserter} instead. This class predates
+ *             {@code TokenStreamAsserter} and uses raw arrays and a less
+ *             structured API. It will be removed in a future release.
+ */
+@Deprecated
 public class TokenStreamTestHelpers {
 
     /*
@@ -18,7 +26,7 @@ public class TokenStreamTestHelpers {
 
   private static final String[] EMPTY_ARRAY = {};
 
-  public static ArrayList<ManualTokenStream.SimpleToken> get_simpletokens(TokenStream ts) throws IOException {
+  public static ArrayList<ManualTokenStream.SimpleToken> getSimpleTokens(TokenStream ts) throws IOException {
     CharTermAttribute ta = ts.addAttribute(CharTermAttribute.class);
     PositionIncrementAttribute pia = ts.addAttribute(PositionIncrementAttribute.class);
 
@@ -31,21 +39,21 @@ public class TokenStreamTestHelpers {
     return sts;
   }
 
-  public static String[] get_terms(TokenStream ts) throws IOException {
-    return get_simpletokens(ts).stream().map(s -> s.text).toArray(String[]::new);
+  public static String[] getTerms(TokenStream ts) throws IOException {
+    return getSimpleTokens(ts).stream().map(s -> s.text).toArray(String[]::new);
   }
 
-  public static List<String[]> get_nested_terms(TokenStream ts) throws IOException {
-    ArrayList<ManualTokenStream.SimpleToken> tokens = get_simpletokens(ts);
+  public static List<String[]> getNestedTerms(TokenStream ts) throws IOException {
+    ArrayList<ManualTokenStream.SimpleToken> tokens = getSimpleTokens(ts);
     int lastPosition = tokens.get(tokens.size() - 1).position;
     ArrayList<ArrayList<String>> values = new ArrayList<ArrayList<String>>(lastPosition);
     for(int i = 0; i < lastPosition; i++) {
       values.add(i, new ArrayList<String>());
     }
     tokens.forEach(st ->{
-      int array_pos = st.position - 1;
-      ArrayList<String> positional_values = values.get(array_pos);
-      positional_values.add(st.text);
+      int arrayPos = st.position - 1;
+      ArrayList<String> positionalValues = values.get(arrayPos);
+      positionalValues.add(st.text);
     } );
     return values.stream().map(al -> al.toArray(EMPTY_ARRAY)).collect(Collectors.toList());
   }

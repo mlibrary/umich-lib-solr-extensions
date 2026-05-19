@@ -1,7 +1,7 @@
 package edu.umich.lib.solr.filter;
 
-import edu.umich.lib.solr.ManualTokenStream;
-import edu.umich.lib.solr.TokenStreamAsserter;
+import edu.umich.lib.solr.testing.ManualTokenStream;
+import edu.umich.lib.solr.testing.TokenStreamAsserter;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Tokenizer;
@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.HashMap;
 import java.util.stream.Stream;
 
-import static edu.umich.lib.solr.TokenStreamAsserter.*;
+import static edu.umich.lib.solr.testing.TokenStreamAsserter.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**

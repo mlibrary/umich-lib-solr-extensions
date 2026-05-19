@@ -1,4 +1,4 @@
-package edu.umich.lib.solr;
+package edu.umich.lib.solr.testing;
 
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
@@ -11,7 +11,7 @@ import java.util.List;
 
 public class ManualTokenStream extends TokenStream {
 
-  static class SimpleToken {
+  public static class SimpleToken {
     public Integer position;
     public String text;
 

@@ -1,12 +1,13 @@
 package edu.umich.lib.solr;
 
+import edu.umich.lib.solr.testing.ManualTokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 
 import org.junit.jupiter.api.Test;
 
-import static edu.umich.lib.solr.TokenStreamTestHelpers.get_simpletokens;
-import static edu.umich.lib.solr.TokenStreamTestHelpers.get_terms;
+import static edu.umich.lib.solr.testing.TokenStreamTestHelpers.getSimpleTokens;
+import static edu.umich.lib.solr.testing.TokenStreamTestHelpers.getTerms;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
@@ -31,7 +32,7 @@ public class ManualTokenStreamTest {
     ManualTokenStream ts = new ManualTokenStream();
     ts.add("Bill", 1);
     ts.add("Dueber", 2);
-    assertArrayEquals(new String[]{"Bill", "Dueber"}, get_terms(ts));
+    assertArrayEquals(new String[]{"Bill", "Dueber"}, getTerms(ts));
   }
 
 
@@ -47,7 +48,7 @@ public class ManualTokenStreamTest {
     ts.add("Dueber", 2);
     ts.add("Danit", 3);
 
-    List<ManualTokenStream.SimpleToken> simpleTokens = get_simpletokens(ts);
+    List<ManualTokenStream.SimpleToken> simpleTokens = getSimpleTokens(ts);
 
 
 

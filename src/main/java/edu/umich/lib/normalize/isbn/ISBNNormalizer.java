@@ -16,9 +16,12 @@ import java.util.regex.Pattern;
  *
  * @author Bill Dueber dueberb@umich.edu
  */
-public class ISBNNormalizer {
+public final class ISBNNormalizer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    /** Utility class — do not instantiate. */
+    private ISBNNormalizer() {}
 
     private static final String ISBN_DELIMITER_PATTERN = "\\-";
 

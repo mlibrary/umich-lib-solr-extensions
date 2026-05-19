@@ -1,6 +1,6 @@
 package edu.umich.lib.solr.filter;
 
-import edu.umich.lib.solr.TokenStreamAsserter;
+import edu.umich.lib.solr.testing.TokenStreamAsserter;
 import org.apache.lucene.analysis.TokenFilterFactory;
 import org.junit.jupiter.api.*;
 

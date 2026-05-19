@@ -13,7 +13,7 @@ import org.junit.jupiter.api.TestInstance;
 
 /**
  * Live IT for the two call-number sort field types: CallNumberSortKeyFieldType
- * and CallnumberSortableFieldType.
+ * and CallNumberSortableFieldType.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CallNumberSortLiveIT extends AbstractLiveIT {

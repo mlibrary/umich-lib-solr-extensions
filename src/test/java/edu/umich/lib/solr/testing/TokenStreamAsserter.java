@@ -1,4 +1,4 @@
-package edu.umich.lib.solr;
+package edu.umich.lib.solr.testing;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;

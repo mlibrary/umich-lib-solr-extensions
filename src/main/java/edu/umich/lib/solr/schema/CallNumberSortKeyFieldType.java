@@ -15,10 +15,10 @@ public class CallNumberSortKeyFieldType extends StrField {
   protected Boolean passThroughOnError = false;
 
   // Field delimiter sorts last
-  private final String FIELD_DELIMITER = "}";
+  private static final String FIELD_DELIMITER = "}";
 
   // End of callnumber sorts first (so A1<field delim> sorts before A1 1<field delim>
-  private final String END_OF_CALLNUMBER = "\u001F";
+  private static final String END_OF_CALLNUMBER = "\u001F";
 
   protected void init(IndexSchema schema, Map<String, String> args) {
     super.init(schema, args);
@@ -38,32 +38,32 @@ public class CallNumberSortKeyFieldType extends StrField {
   @Override
   public String toInternal(String val) {
     String[] fields = val.split(FIELD_DELIMITER, 2);
-    String appended_fields = "";
+    String appendedFields = "";
     if (fields.length > 1) {
-      appended_fields = fields[1];
+      appendedFields = fields[1];
     }
 
     AnyCallNumberSimple cn = new AnyCallNumberSimple(fields[0]);
 
     // Valid? Return it
     if (cn.hasValidKey()) {
-      return bundled_fields(cn.validKey(), appended_fields);
+      return bundledFields(cn.validKey(), appendedFields);
     }
     if (allowTruncated && cn.hasAcceptableTruncatedKey()) {
-      return bundled_fields(cn.acceptableTruncatedKey(), appended_fields);
+      return bundledFields(cn.acceptableTruncatedKey(), appendedFields);
     }
 
     // Not valid at all, so if we're not passing through, return null.
     if (passThroughOnError) {
-      return bundled_fields(cn.invalidKey(), appended_fields);
+      return bundledFields(cn.invalidKey(), appendedFields);
     } else {
       return null;
     }
   }
 
 
-  public String bundled_fields(String normalized_cn, String appended_field) {
-    return normalized_cn + END_OF_CALLNUMBER + FIELD_DELIMITER + appended_field;
+  public String bundledFields(String normalizedCn, String appendedField) {
+    return normalizedCn + END_OF_CALLNUMBER + FIELD_DELIMITER + appendedField;
   }
 
 

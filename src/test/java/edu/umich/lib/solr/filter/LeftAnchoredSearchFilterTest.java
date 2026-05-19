@@ -4,9 +4,9 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
 import org.junit.jupiter.api.Test;
 
-import edu.umich.lib.solr.ManualTokenStream;
+import edu.umich.lib.solr.testing.ManualTokenStream;
 
-import static edu.umich.lib.solr.TokenStreamTestHelpers.get_nested_terms;
+import static edu.umich.lib.solr.testing.TokenStreamTestHelpers.getNestedTerms;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
@@ -23,7 +23,7 @@ public class LeftAnchoredSearchFilterTest {
     ts.add("Bill", 1);
 
     LeftAnchoredSearchFilter lasf = new LeftAnchoredSearchFilter(ts);
-    assertArrayEquals(new String[]{"Bill1"}, get_nested_terms(lasf).get(0));
+    assertArrayEquals(new String[]{"Bill1"}, getNestedTerms(lasf).get(0));
   }
 
   @Test
@@ -41,7 +41,7 @@ public class LeftAnchoredSearchFilterTest {
     expected.add(new String[]{"Dueber3"});
 
     LeftAnchoredSearchFilter lasf = new LeftAnchoredSearchFilter(ts);
-    List<String[]> terms = get_nested_terms(lasf);
+    List<String[]> terms = getNestedTerms(lasf);
 
     for (int i = 0; i < expected.size(); i++) {
       assertArrayEquals(expected.get(i), terms.get(i));

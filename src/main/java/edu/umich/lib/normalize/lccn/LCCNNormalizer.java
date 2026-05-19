@@ -17,7 +17,10 @@ import java.util.regex.Pattern;
  *
  * @author Bill Dueber dueberb@umich.edu
  */
-public class LCCNNormalizer {
+public final class LCCNNormalizer {
+
+    /** Utility class — do not instantiate. */
+    private LCCNNormalizer() {}
 
     // Normalization patterns from http://www.loc.gov/marc/lccn-namespace.html#syntax
     public static final Pattern trailingSlashPattern = Pattern.compile("^(.*?)/.*$");

@@ -3,6 +3,8 @@ package edu.umich.lib.normalize.callnumber;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 class LCCallNumberSimpleTest {
 
     @ParameterizedTest
@@ -11,6 +13,6 @@ class LCCallNumberSimpleTest {
         LCCallNumberSimple lccs = new LCCallNumberSimple(original);
         String key = lccs.collationKey();
         if (key == null) key = "null";
-        assert(key).equals(collation.toString());
+        assertEquals(collation.trim(), key);
     }
 }

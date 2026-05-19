@@ -20,11 +20,11 @@ public class LCCallNumberSimple extends AbstractCallNumber {
     // THe letters for a callnumber are either one letter, two letters, a K followed by 0-2 letters, or
     // the three letter sequence LAW
 
-    public static String letter_pat = "(?<letters>(?:LAW|law|Law|[Kk]\\p{L}{0,2}|\\p{L}{1,2}))";
+    public static String LETTER_PAT = "(?<letters>(?:LAW|law|Law|[Kk]\\p{L}{0,2}|\\p{L}{1,2}))";
 
-    public static Pattern lc_start = Pattern.compile(
+    public static Pattern LC_START = Pattern.compile(
 //      "^\\s*(?<letters>[KkLl]?\\p{L}{1,2})[-\\s]*" + // 1-2 (3 in the Ks) initial letters, plus optional whitespace
-            "^\\s*" + letter_pat + "\\s*" +
+            "^\\s*" + LETTER_PAT + "\\s*" +
                     "(?<digits>\\d{1,5}(?!\\d))" +                  // 1-5 digits
                     "(?:\\.(?<decimals>\\d+))?" +   // an optional decimal ('.' plus digits)
                     "(?<rest>.*)$"        // Whatever's left
@@ -35,14 +35,14 @@ public class LCCallNumberSimple extends AbstractCallNumber {
     // That can be a single letter, any two-letter combination, or a set of three
     // letters starting with "K" (books about legal issues) or "L" (more of the same).
     // @TODO Put a guard around letter-only queries so we only accept them when an argument to the constructor says to.
-//  public static Pattern acceptable_only_letters = Pattern.compile("^\\p{L}{1,3}$");
+//  public static Pattern ACCEPTABLE_ONLY_LETTERS = Pattern.compile("^\\p{L}{1,3}$");
 
-    public static Pattern acceptable_only_letters = Pattern.compile(letter_pat + "\\s*$");
+    public static Pattern ACCEPTABLE_ONLY_LETTERS = Pattern.compile(LETTER_PAT + "\\s*$");
 
     public LCCallNumberSimple(String str) {
         original = str;
         trimmedOriginal = trimPunctuation(str.trim()).trim().toLowerCase();
-        Matcher m = lc_start.matcher(trimmedOriginal);
+        Matcher m = LC_START.matcher(trimmedOriginal);
         if (m.matches()) {
             isValid = true;
             letters = m.group("letters");
@@ -54,12 +54,8 @@ public class LCCallNumberSimple extends AbstractCallNumber {
             isValid = false;
         }
         if (hasAcceptableTruncatedKey()) {
-            LOGGER.debug("Original '" + trimmedOriginal + "'matches one-acceptable_only pattern");
+            LOGGER.debug("Original '" + trimmedOriginal + "'matches one-ACCEPTABLE_ONLY pattern");
         }
-    }
-
-    public Logger logger() {
-        return LOGGER;
     }
 
     @Override
@@ -106,8 +102,8 @@ public class LCCallNumberSimple extends AbstractCallNumber {
     }
 
     private String collationDigits() {
-        Integer digit_length = digits.length();
-        return digit_length + digits;
+        Integer digitLength = digits.length();
+        return digitLength + digits;
     }
 
     private String collationDecimals() {
@@ -141,7 +137,7 @@ public class LCCallNumberSimple extends AbstractCallNumber {
 
 
     private Boolean isAcceptableTruncatedCallnumber(String str) {
-        return acceptable_only_letters.matcher(str.trim().toLowerCase()).matches();
+        return ACCEPTABLE_ONLY_LETTERS.matcher(str.trim().toLowerCase()).matches();
     }
 
 

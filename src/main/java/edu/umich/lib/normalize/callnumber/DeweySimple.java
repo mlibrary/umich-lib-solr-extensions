@@ -23,33 +23,30 @@ import java.util.regex.Pattern;
  */
 public class DeweySimple extends AbstractCallNumber {
 
-  protected static Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-  public static Logger logger() {
-    return LOGGER;
-  }
+  private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
   public String digits = "";
   public String decimals = "";
   public String rest = "";
 
-  public static Pattern deweyPattern = Pattern.compile(
+  public static Pattern DEWEY_PATTERN = Pattern.compile(
       "^\\s*(?<digits>\\d{3})" + "\\s*" +
       "(?:\\.(?<decimals>[\\d/']+))?"  +
       "(?:\\s+(?<rest>.*))?$");
 
-  public static Pattern acceptableThreeDigitsPattern = Pattern.compile("^\\s*\\d{3}\\s*$");
+  public static Pattern ACCEPTABLE_THREE_DIGITS_PATTERN = Pattern.compile("^\\s*\\d{3}\\s*$");
 
 
   public DeweySimple(String str) {
     trimmedOriginal = trimPunctuation(str.trim().toLowerCase());
-    Matcher m = deweyPattern.matcher(trimmedOriginal);
+    Matcher m = DEWEY_PATTERN.matcher(trimmedOriginal);
     if (m.matches()) {
       isValid  = true;
       digits   = m.group("digits");
       decimals = fixedDecimals(m.group("decimals"));
       rest     = cleanupFreetext(m.group("rest"));
     } else {
-      logger().debug(trimmedOriginal + " is invalid");
+      LOGGER.debug(trimmedOriginal + " is invalid");
       isValid = false;
     }
 
@@ -121,7 +118,7 @@ public class DeweySimple extends AbstractCallNumber {
   }
 
   private Boolean isValidTruncatedQuery(String str) {
-    return acceptableThreeDigitsPattern.matcher(str).matches();
+    return ACCEPTABLE_THREE_DIGITS_PATTERN.matcher(str).matches();
   }
 
 }

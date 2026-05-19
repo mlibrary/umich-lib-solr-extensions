@@ -14,36 +14,37 @@ import java.util.regex.Pattern;
  *
  * @author Bill Dueber
  */
-abstract class AbstractCallNumber {
+public abstract class AbstractCallNumber {
 
     /**
      * The passed in string, unmodified
      */
-    public String original;
+    protected String original;
     /**
      * The original string with schema-aware non-semantic leading/trailing characters
      * (e.g., spaces) removed
      */
-    public String trimmedOriginal;
+    protected String trimmedOriginal;
 
     /**
      * Whether this callnumber is considered valid in the implementing scheme
      */
-    public Boolean isValid;
+    protected Boolean isValid;
 
     /**
-     * @return Whether we can construct a valid key, based on the implementing schema
+     * @return {@code true} if a valid key can be constructed from this call number
      */
     abstract Boolean hasValidKey();
 
     /**
-     * Computes a valid key
+     * Computes a valid key for this call number.
      *
-     * @return
+     * @return the valid sort key, or {@code null} if the call number is not valid
      */
     abstract String validKey();
 
     /**
+     * @return {@code true} if an acceptable truncated key can be produced
      * @see #acceptableTruncatedKey()
      */
     abstract Boolean hasAcceptableTruncatedKey();
@@ -53,12 +54,16 @@ abstract class AbstractCallNumber {
      * (e.g., an LC call number requires both an alphabetic and numeric portion, but
      * it can be useful to accept just the alphabetic portion.
      *
-     * @return
+     * @return the acceptable truncated key, or {@code null} if none is available
      */
     abstract String acceptableTruncatedKey();
 
     /**
-     * @return The "invalid" key -- a transformed version of the input string
+     * Returns the "invalid" key — a transformed version of the input string
+     * that can still be used for sorting/searching even when the call number
+     * does not conform to the implementing scheme.
+     *
+     * @return a non-null transformed key string
      */
     abstract String invalidKey();
 
@@ -96,12 +101,12 @@ abstract class AbstractCallNumber {
     }
 
     // For trimming punctuation
-    public static Pattern trimPunct = Pattern.compile(
+    public static Pattern TRIM_PUNCT = Pattern.compile(
             "^\\p{Punct}*(.*?)\\p{Punct}*$"
     );
 
     public String trimPunctuation(String str) {
-        Matcher m = trimPunct.matcher(str);
+        Matcher m = TRIM_PUNCT.matcher(str);
         if (m.matches()) {
             return m.group(1);
         } else {

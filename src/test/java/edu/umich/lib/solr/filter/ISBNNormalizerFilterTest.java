@@ -1,6 +1,6 @@
 package edu.umich.lib.solr.filter;
 
-import edu.umich.lib.solr.TokenStreamAsserter;
+import edu.umich.lib.solr.testing.TokenStreamAsserter;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Tokenizer;
@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.Map;
 
-import static edu.umich.lib.solr.TokenStreamAsserter.*;
+import static edu.umich.lib.solr.testing.TokenStreamAsserter.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**

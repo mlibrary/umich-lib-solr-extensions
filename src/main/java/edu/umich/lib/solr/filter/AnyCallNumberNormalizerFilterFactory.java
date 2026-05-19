@@ -2,7 +2,6 @@ package edu.umich.lib.solr.filter;
 
 import org.apache.lucene.analysis.TokenStream;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -58,17 +57,5 @@ public class AnyCallNumberNormalizerFilterFactory extends SimpleFilterFactory {
     @Override
     public AnyCallNumberNormalizerFilter create(TokenStream input) {
         return new AnyCallNumberNormalizerFilter(input, getEchoInvalidInput(), getFilterArgs());
-    }
-
-    /**
-     * Translates the legacy {@code passThroughOnError} parameter to the
-     * {@code echoInvalidInput} key expected by {@link SimpleFilterFactory}.
-     */
-    private static Map<String, String> normalizeArgs(Map<String, String> args) {
-        Map<String, String> normalized = new HashMap<>(args);
-        if (normalized.containsKey("passThroughOnError") && !normalized.containsKey("echoInvalidInput")) {
-            normalized.put("echoInvalidInput", normalized.remove("passThroughOnError"));
-        }
-        return normalized;
     }
 }

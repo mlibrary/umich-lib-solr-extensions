@@ -23,7 +23,7 @@
     "Bill Dueber" → [Bill1, Dueber200]
     Phrase matches must span the whole field value.
 
-  CallNumberSortKeyFieldType / CallnumberSortableFieldType
+  CallNumberSortKeyFieldType / CallNumberSortableFieldType
     Both extend StrField; createField() normalises the value to a
     collation sort key via AnyCallNumberSimple. Attributes allowTruncated
     and passThroughOnError control fallback behaviour.
@@ -98,7 +98,7 @@
   <fieldType name="callnumber_sortkey"  class="edu.umich.lib.solr.schema.CallNumberSortKeyFieldType"
              allowTruncated="true" passThroughOnError="false"/>
 
-  <fieldType name="callnumber_sortable" class="edu.umich.lib.solr.schema.CallnumberSortableFieldType"
+  <fieldType name="callnumber_sortable" class="edu.umich.lib.solr.schema.CallNumberSortableFieldType"
              allowTruncated="true" passThroughOnError="false"/>
 
   <!-- AnalyzedString: stores values pre-normalized through a reference TextField's
