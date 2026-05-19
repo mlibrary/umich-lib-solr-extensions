@@ -186,28 +186,31 @@ Any attribute on the `<filter>` element is available inside the filter construct
 | `getArg("key")` | Returns the `String` value; throws `IllegalArgumentException` if absent |
 | `getArg("key", "default")` | Returns the `String` value, or `"default"` if absent; never `null` |
 
-All schema.xml attribute values arrive as `String`. Convert to other types in the constructor:
+All schema.xml attribute values arrive as `String`. Convert to other types in the constructor.
+Pass a string default to `getArg` for optional parameters; use `getArg("key")` (no default)
+for required ones — it throws `IllegalArgumentException` at Solr core load time if the
+attribute is absent.
 
 ```java
-// boolean
+// boolean  (optional — default false)
 boolean reverse   = Boolean.parseBoolean(getArg("reverse", "false"));
 
-// int
+// int  (optional — default 256)
 int maxLength     = Integer.parseInt(getArg("maxLength", "256"));
 
-// long
+// long  (optional — default 0)
 long threshold    = Long.parseLong(getArg("threshold", "0"));
 
-// double
+// double  (optional — default 0.5)
 double minScore   = Double.parseDouble(getArg("minScore", "0.5"));
 
-// single char  (validate length == 1 yourself)
+// single char  (required — throws if absent; validate length == 1 yourself)
 char letter       = getArg("letter").charAt(0);
 
-// compiled regex Pattern
+// compiled regex Pattern  (optional — default splits on whitespace)
 Pattern separator = Pattern.compile(getArg("separator", "\\s+"));
 
-// enum
+// enum  (optional — default STRICT)
 MyMode mode       = MyMode.valueOf(getArg("mode", "STRICT").toUpperCase());
 ```
 
