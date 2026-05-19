@@ -66,6 +66,23 @@ class UpcaseWordsThatStartWithFilterTest {
         }
 
         @Test
+        @DisplayName("README example: 'apples and bananas' with letter=a, reverse=false → [APPLES, AND, bananas]")
+        void readmeExample_reverseFalse() throws IOException {
+            // 'and' starts with 'a' so it is uppercased too
+            try (var a = analyzer(Map.of("letter", "a"))) {
+                assertTerms(analyze(a, "apples and bananas"), "APPLES", "AND", "bananas");
+            }
+        }
+
+        @Test
+        @DisplayName("README example: 'apples and bananas' with letter=a, reverse=true → [SELPPA, DNA, bananas]")
+        void readmeExample_reverseTrue() throws IOException {
+            try (var a = analyzer(Map.of("letter", "a", "reverse", "true"))) {
+                assertTerms(analyze(a, "apples and bananas"), "SELPPA", "DNA", "bananas");
+            }
+        }
+
+        @Test
         @DisplayName("All tokens match — all uppercased")
         void allMatchingTokens_allUppercased() throws IOException {
             try (var a = analyzer(Map.of("letter", "b"))) {

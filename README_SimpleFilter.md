@@ -168,8 +168,10 @@ com.example.solr.filter.UpcaseWordsThatStartWithFilterFactory
 ```
 
 `"apples and bananas"` with `letter="a"`:
-- `reverse="false"` (default) → `[APPLES, and, bananas]`
-- `reverse="true"` → `[SELPPA, and, bananas]`
+- `reverse="false"` (default) → `[APPLES, AND, bananas]`
+- `reverse="true"` → `[SELPPA, DNA, bananas]`
+
+Note that `"and"` also starts with `"a"`, so it is uppercased alongside `"apples"`.
 
 ---
 
