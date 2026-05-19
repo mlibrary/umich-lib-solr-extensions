@@ -11,25 +11,36 @@ import org.slf4j.LoggerFactory;
 import java.lang.invoke.MethodHandles;
 
 /**
- * @author dueberb
- * A Solr filter that take an LC/Dewey Call Number (/ shelf key) and
- * turns it into something that can be sorted correctly. While the
- * fieldType () is better for general use, if you want to do prefix
- * queries, you need to have an analysis chain so you can add the
- * edge ngram filter, so we've got this.
- * <p>
+ * Factory for {@link AnyCallNumberSimpleFilter}.
  *
- * <fieldType name="callnumber_prefix_search"  class="libraryIdentifier.TextField">
- * <analyzer type="index">
- * <tokenizer class="libraryIdentifier.KeywordTokenizerFactory"/>
- * <filter class="edu.umich.library.lucene.analysis.AnyCallNumberSimpleFilterFactory" passThroughOnError="true"/>
- * <filter class="libraryIdentifier.EdgeNGramFilterFactory" maxGramSize="40" minGramSize="2"/>
- * </analyzer>
- * <analyzer type="query">
- * <tokenizer class="libraryIdentifier.KeywordTokenizerFactory"/>
- * <filter class="edu.umich.library.lucene.analysis.AnyCallNumberSimpleFilterFactory" passThroughOnError="true"/>
- * </analyzer>
+ * <p>Normalizes LC or Dewey call number tokens to a sortable key string, suitable
+ * for sort fields and (when combined with an edge-ngram filter) left-anchored
+ * prefix search.
+ *
+ * <p>Supported parameters:
+ * <ul>
+ *   <li>{@code allowTruncated} (boolean, default {@code true}) — when {@code true},
+ *       truncated call number keys are accepted.</li>
+ *   <li>{@code passThroughOnError} (boolean, default {@code false}) — when {@code true},
+ *       tokens that cannot be parsed as a call number are passed through unchanged.</li>
+ * </ul>
+ *
+ * <h2>Schema example</h2>
+ * <pre>{@code
+ * <fieldType name="text_anycallnumber" class="solr.TextField">
+ *   <analyzer type="index">
+ *     <tokenizer class="solr.KeywordTokenizerFactory"/>
+ *     <filter class="anyCallNumberSimple" passThroughOnError="true"/>
+ *     <filter class="solr.EdgeNGramFilterFactory" maxGramSize="40" minGramSize="2"/>
+ *   </analyzer>
+ *   <analyzer type="query">
+ *     <tokenizer class="solr.KeywordTokenizerFactory"/>
+ *     <filter class="anyCallNumberSimple" passThroughOnError="true"/>
+ *   </analyzer>
  * </fieldType>
+ * }</pre>
+ *
+ * @author Bill Dueber dueberb@umich.edu
  */
 public class AnyCallNumberSimpleFilterFactory extends TokenFilterFactory {
 

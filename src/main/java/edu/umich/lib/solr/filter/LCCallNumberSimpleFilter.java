@@ -12,14 +12,9 @@ import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 
 /**
- * A Solr filter that take an LC Call Number (/ shelf key) and
- * turns it into something that can be sorted correctly _and_
- * can be used for left-anchored search if turned into edge-ngrams.
- * <p>
- *
- * <fieldType name="callnumber_sortable" passThroughOnError="true">
- *
- * </fieldType>
+ * A Solr/Lucene token filter that normalizes LC Call Number tokens to a
+ * sortable key string suitable for both sort fields and left-anchored prefix search
+ * (when paired with an edge-ngram filter).
  */
 
 public final class LCCallNumberSimpleFilter extends TokenFilter {
@@ -45,8 +40,10 @@ public final class LCCallNumberSimpleFilter extends TokenFilter {
 
 
   /**
-   * @param aStream A {@link TokenStream} that parses streams with
-   *                ISO-639-1 and ISO-639-2 codes
+   * @param aStream            the upstream token stream
+   * @param allowTruncated     when {@code true}, truncated call number keys are accepted
+   * @param passThroughOnError when {@code true}, tokens that cannot be parsed as an
+   *                           LC call number are passed through unchanged
    */
   public LCCallNumberSimpleFilter(TokenStream aStream,  Boolean allowTruncated, Boolean passThroughOnError) {
     super(aStream);
@@ -60,10 +57,9 @@ public final class LCCallNumberSimpleFilter extends TokenFilter {
 
 
   /**
-   * Increments and processes tokens in the ISO-639 code stream.
+   * Normalizes the next LC call number token to a sortable key string.
    *
-   * @return True if a value is still available for processing in the token
-   * stream; otherwise, false
+   * @return {@code true} if a token was produced; {@code false} at end of stream
    */
   @Override
   public boolean incrementToken() throws IOException {

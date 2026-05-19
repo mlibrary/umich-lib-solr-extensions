@@ -9,6 +9,20 @@ import org.slf4j.LoggerFactory;
 import java.lang.invoke.MethodHandles;
 import java.util.Map;
 
+/**
+ * A {@link org.apache.solr.schema.StrField} variant that stores the raw string value
+ * but indexes it via the analysis chain of a named {@code fieldType}.
+ *
+ * <p>Configure with a {@code fieldType} attribute pointing to a single-token field type
+ * (e.g. one that applies ISBN or LCCN normalization through a {@code KeywordTokenizer}).
+ * {@link #toInternal(String)} runs the input through that field type's index analyzer and
+ * returns the resulting term as the stored/indexed value.
+ *
+ * <p>Required schema attribute: {@code fieldType} — the name of the field type whose
+ * index analyzer is used for normalization.
+ *
+ * @author Bill Dueber dueberb@umich.edu
+ */
 public class AnalyzedString extends StrField {
 
   String fieldType;

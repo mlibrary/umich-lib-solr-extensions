@@ -5,14 +5,16 @@ import java.util.regex.Pattern;
 
 
 /**
- * Created with IntelliJ IDEA.
- * User: dueberb
- * Date: 1/30/15
- * Time: 10:14 AM
- * To change this template use File | Settings | File Templates.
- */
-
-/**
+ * Utility class for normalizing Library of Congress Control Number (LCCN) strings.
+ *
+ * <p>Follows the normalization algorithm described at
+ * <a href="http://www.loc.gov/marc/lccn-namespace.html#syntax">
+ * http://www.loc.gov/marc/lccn-namespace.html#syntax</a>.
+ *
+ * <p>{@link #normalize(String)} always returns a non-null string.  Inputs that
+ * do not match any recognized LCCN pattern are returned lowercased with whitespace
+ * stripped, rather than throwing.
+ *
  * @author Bill Dueber dueberb@umich.edu
  */
 public class LCCNNormalizer {

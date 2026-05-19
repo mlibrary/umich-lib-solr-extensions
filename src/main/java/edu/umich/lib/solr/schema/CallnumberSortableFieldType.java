@@ -10,6 +10,17 @@ import org.slf4j.LoggerFactory;
 import java.lang.invoke.MethodHandles;
 
 
+/**
+ * Extension of {@link CallNumberSortKeyFieldType} that creates a field storing the
+ * <em>original input text</em> (suitable for display) while indexing with DOCS-only
+ * options to support existence queries.  Sort order is still provided by the inherited
+ * {@code toInternal()} normalization.
+ *
+ * <p>Returns {@code null} (skipping the field) when the call number cannot produce any
+ * usable key and {@code passThroughOnError} is {@code false}.
+ *
+ * @author Bill Dueber dueberb@umich.edu
+ */
 public class CallnumberSortableFieldType extends CallNumberSortKeyFieldType {
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
