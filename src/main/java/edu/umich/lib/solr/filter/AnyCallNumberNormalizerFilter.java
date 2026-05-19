@@ -17,7 +17,7 @@ import java.lang.invoke.MethodHandles;
  * <p>
  */
 
-public final class AnyCallNumberSimpleFilter extends TokenFilter {
+public final class AnyCallNumberNormalizerFilter extends TokenFilter {
   /**
    * Logger used to log info/warnings.
    */
@@ -45,14 +45,14 @@ public final class AnyCallNumberSimpleFilter extends TokenFilter {
    * @param passThroughOnError when {@code true}, tokens that cannot be parsed as a
    *                           call number are passed through unchanged
    */
-  public AnyCallNumberSimpleFilter(TokenStream aStream, Boolean allowTruncated, Boolean passThroughOnError) {
+  public AnyCallNumberNormalizerFilter(TokenStream aStream, Boolean allowTruncated, Boolean passThroughOnError) {
     super(aStream);
     this.allowTruncated     = allowTruncated;
     this.passThroughOnError = passThroughOnError;
 
   }
 
-  public AnyCallNumberSimpleFilter(TokenStream aStream) {
+  public AnyCallNumberNormalizerFilter(TokenStream aStream) {
     this(aStream, false, true);
   }
 

@@ -2,7 +2,7 @@ edu.umich.lib.solr.filter.LeftAnchoredSearchFilterFactory
 edu.umich.lib.solr.filter.FullyAnchoredSearchFilterFactory
 edu.umich.lib.solr.filter.ISBNNormalizerFilterFactory
 edu.umich.lib.solr.filter.LCCNNormalizerFilterFactory
-edu.umich.lib.solr.filter.LCCallNumberSimpleFilterFactory
-edu.umich.lib.solr.filter.DeweyCallNumberSimpleFilterFactory
-edu.umich.lib.solr.filter.AnyCallNumberSimpleFilterFactory
+edu.umich.lib.solr.filter.LCCallNumberNormalizerFilterFactory
+edu.umich.lib.solr.filter.DeweyCallNumberNormalizerFilterFactory
+edu.umich.lib.solr.filter.AnyCallNumberNormalizerFilterFactory
 edu.umich.lib.solr.filter.SimpleFilterFactory

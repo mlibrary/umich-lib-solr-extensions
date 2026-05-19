@@ -73,7 +73,7 @@
   <fieldType name="text_anycallnumber" class="solr.TextField">
     <analyzer>
       <tokenizer class="solr.KeywordTokenizerFactory"/>
-      <filter class="edu.umich.lib.solr.filter.AnyCallNumberSimpleFilterFactory"
+      <filter class="edu.umich.lib.solr.filter.AnyCallNumberNormalizerFilterFactory"
               allowTruncated="true" echoInvalidInput="true"/>
     </analyzer>
   </fieldType>
@@ -81,14 +81,14 @@
   <fieldType name="text_lccallnumber" class="solr.TextField">
     <analyzer>
       <tokenizer class="solr.KeywordTokenizerFactory"/>
-      <filter class="edu.umich.lib.solr.filter.LCCallNumberSimpleFilterFactory"/>
+      <filter class="edu.umich.lib.solr.filter.LCCallNumberNormalizerFilterFactory"/>
     </analyzer>
   </fieldType>
 
   <fieldType name="text_deweycallnumber" class="solr.TextField">
     <analyzer>
       <tokenizer class="solr.KeywordTokenizerFactory"/>
-      <filter class="edu.umich.lib.solr.filter.DeweyCallNumberSimpleFilterFactory"
+      <filter class="edu.umich.lib.solr.filter.DeweyCallNumberNormalizerFilterFactory"
               allowTruncated="true" echoInvalidInput="true"/>
     </analyzer>
   </fieldType>

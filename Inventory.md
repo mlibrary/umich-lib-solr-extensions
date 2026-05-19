@@ -13,9 +13,9 @@ All filters are Lucene `TokenFilter` / `TokenFilterFactory` pairs operating at a
 
 | Class | Use Case |
 |-------|----------|
-| `LCCallNumberSimpleFilter` | Normalizes LC Call Numbers to a sortable key for sort fields and left-anchored prefix search. |
-| `DeweyCallNumberSimpleFilter` | Same as above for Dewey Decimal call numbers. |
-| `AnyCallNumberSimpleFilter` | Auto-detects LC vs Dewey and normalizes accordingly — use when call number type is unknown at index time. |
+| `LCCallNumberNormalizerFilter` | Normalizes LC Call Numbers to a sortable key for sort fields and left-anchored prefix search. |
+| `DeweyCallNumberNormalizerFilter` | Same as above for Dewey Decimal call numbers. |
+| `AnyCallNumberNormalizerFilter` | Auto-detects LC vs Dewey and normalizes accordingly — use when call number type is unknown at index time. |
 | `*Factory` (×3) | Schema wiring for the three call number filters above. |
 
 ## Identifier Normalization
