@@ -8,22 +8,14 @@ this library. They handle the Lucene/Solr plumbing so that you only have to writ
 
 ## How it works
 
-```
-upstream token stream
-        │
-        ▼
-  incrementToken()          ← driven by Solr/Lucene
-        │
-        ▼
-   munge(token)
-        │
-   ┌────┴────────────────┐
-   │ null returned?      │
-   │                     │
-   │ echoInvalidInput=false  → drop token (try next)
-   │ echoInvalidInput=true   → pass original token through unchanged
-   │                     │
-   └─── non-null string ─┴─→ emit transformed token
+```mermaid
+flowchart TD
+    A[upstream token stream] --> B[incrementToken]
+    B --> C[munge token]
+    C --> D{null returned?}
+    D -->|"echoInvalidInput=false"| E[drop token — try next]
+    D -->|"echoInvalidInput=true"| F[pass original token through unchanged]
+    D -->|non-null string| G[emit transformed token]
 ```
 
 - Return the **transformed string** to emit it.
