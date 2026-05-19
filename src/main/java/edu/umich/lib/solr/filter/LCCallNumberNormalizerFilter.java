@@ -1,90 +1,81 @@
 package edu.umich.lib.solr.filter;
 
-import org.apache.lucene.analysis.TokenFilter;
+import edu.umich.lib.normalize.callnumber.LCCallNumberSimple;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.umich.lib.normalize.callnumber.LCCallNumberSimple;
-
-import java.io.IOException;
 import java.lang.invoke.MethodHandles;
+import java.util.Map;
 
 /**
- * A Solr/Lucene token filter that normalizes LC Call Number tokens to a
- * sortable key string suitable for both sort fields and left-anchored prefix search
- * (when paired with an edge-ngram filter).
+ * A Solr/Lucene token filter that normalizes LC call number tokens to a
+ * sortable key string suitable for both sort fields and left-anchored prefix
+ * search (when paired with an edge-ngram filter).
+ *
+ * <p>Tokens that cannot be parsed as an LC call number return {@code null}
+ * from {@link #munge(String)}, which causes {@link SimpleFilter} to either
+ * drop the token or echo it unchanged, depending on the {@code echoInvalidInput}
+ * (schema.xml: {@code passThroughOnError}) setting.
+ *
+ * @author Bill Dueber dueberb@umich.edu
  */
+public final class LCCallNumberNormalizerFilter extends SimpleFilter {
 
-public final class LCCallNumberNormalizerFilter extends TokenFilter {
-  /**
-   * Logger used to log info/warnings.
-   */
-  private static final Logger LOGGER = LoggerFactory
-      .getLogger(MethodHandles.lookup().lookupClass());
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-  /**
-   * The filter term that is a result of the conversion.
-   */
-  private final CharTermAttribute myTermAttribute =
-      addAttribute(CharTermAttribute.class);
+    private final boolean allowTruncated;
 
-  /**
-   * Should we pass through an invalid (doesn't look like) callnumber,
-   * or return nothing (default)
-   */
-
-  private Boolean allowTruncated;
-  private Boolean passThroughOnError;
-
-
-  /**
-   * @param aStream            the upstream token stream
-   * @param allowTruncated     when {@code true}, truncated call number keys are accepted
-   * @param passThroughOnError when {@code true}, tokens that cannot be parsed as an
-   *                           LC call number are passed through unchanged
-   */
-  public LCCallNumberNormalizerFilter(TokenStream aStream,  Boolean allowTruncated, Boolean passThroughOnError) {
-    super(aStream);
-    this.allowTruncated     = allowTruncated;
-    this.passThroughOnError = passThroughOnError;
-  }
-
-  public LCCallNumberNormalizerFilter(TokenStream aStream) {
-    this(aStream, false, true);
-  }
-
-
-  /**
-   * Normalizes the next LC call number token to a sortable key string.
-   *
-   * @return {@code true} if a token was produced; {@code false} at end of stream
-   */
-  @Override
-  public boolean incrementToken() throws IOException {
-    if (!input.incrementToken()) {
-      return false;
+    /**
+     * Full constructor used by {@link LCCallNumberNormalizerFilterFactory}.
+     *
+     * @param in               the upstream token stream
+     * @param echoInvalidInput when {@code true}, tokens that cannot be parsed
+     *                         are passed through unchanged (schema.xml:
+     *                         {@code passThroughOnError})
+     * @param args             all schema.xml attributes forwarded from the factory
+     */
+    public LCCallNumberNormalizerFilter(TokenStream in,
+                                        boolean echoInvalidInput,
+                                        Map<String, String> args) {
+        super(in, echoInvalidInput, args);
+        this.allowTruncated = Boolean.parseBoolean(getArg("allowTruncated", "false"));
     }
 
-    String t = myTermAttribute.toString();
-    if (t != null && t.length() != 0) {
-      try {
-        myTermAttribute.setEmpty();
-        LCCallNumberSimple lc = new LCCallNumberSimple(t);
-        String key = lc.bestKey(allowTruncated, passThroughOnError);
-        if (key == null) {
-          return false;
-        } else {
-          myTermAttribute.append(key);
-        }
-      } catch (IllegalArgumentException details) {
-        if (LOGGER.isInfoEnabled()) {
-          LOGGER.info(details.getMessage(), details);
-        }
-      }
+    /**
+     * Convenience constructor for direct use without a factory.
+     *
+     * @param in               the upstream token stream
+     * @param allowTruncated   when {@code true}, truncated call number keys are accepted
+     * @param echoInvalidInput when {@code true}, unparseable tokens are echoed unchanged
+     */
+    public LCCallNumberNormalizerFilter(TokenStream in,
+                                        boolean allowTruncated,
+                                        boolean echoInvalidInput) {
+        super(in, echoInvalidInput);
+        this.allowTruncated = allowTruncated;
     }
 
-    return true;
-  }
+    /** Default constructor: does not allow truncated keys, drops invalid tokens. */
+    public LCCallNumberNormalizerFilter(TokenStream in) {
+        this(in, false, false);
+    }
+
+    /**
+     * Normalizes an LC call number string to a sortable key.
+     *
+     * @param input the raw call number token text
+     * @return the normalized key, or {@code null} if the input cannot be parsed
+     */
+    @Override
+    public String munge(String input) {
+        try {
+            LCCallNumberSimple lc = new LCCallNumberSimple(input);
+            return lc.bestKey(allowTruncated, false);
+        } catch (IllegalArgumentException e) {
+            LOGGER.info(e.getMessage(), e);
+            return null;
+        }
+    }
 }
