@@ -27,6 +27,17 @@ public final class LCCNNormalizer {
     public static final Pattern lccnDashPattern = Pattern.compile("^(\\w+)(?:-(\\d+))?.*$");
     public static final String LOC_GOV_PREFIX = "http://lccn.loc.gov/";
 
+    /**
+     * Normalizes a raw LCCN string according to the LOC normalization algorithm.
+     *
+     * <p>Strips leading {@code http://lccn.loc.gov/} URIs, removes whitespace, lowercases,
+     * drops everything after a slash, and zero-pads post-hyphen digits to six places.
+     * Inputs that do not match a recognized LCCN pattern are returned lowercased with
+     * whitespace stripped rather than throwing.
+     *
+     * @param raw the raw LCCN string to normalize; must not be {@code null}
+     * @return a non-null normalized LCCN string
+     */
     public static String normalize(String raw) {
 
         // Strip lccn.loc.gov URI prefix before any other processing
