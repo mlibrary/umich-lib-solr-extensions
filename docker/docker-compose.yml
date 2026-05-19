@@ -1,0 +1,55 @@
+# Docker Compose for local Solr 10 integration testing.
+#
+# Brings up a single-node Solr 10 in standalone mode with:
+# - the freshly-built umich-solr-extensions JAR copied into ${SOLR_HOME}/lib
+# - a "test-core" auto-created from src/test/resources/solr-integration/test-core/conf
+#
+# Quick start:
+#   mvn package -DskipTests                          # build the JAR
+#   docker compose -f docker/docker-compose.yml up   # start Solr (foreground)
+#   open http://localhost:8983/solr/                 # admin UI -> test-core
+#
+# Rebuild loop:
+#   mvn package -DskipTests && \
+#   docker compose -f docker/docker-compose.yml restart solr
+#
+# All host paths in volumes: are relative to this compose file (docker/).
+#
+# Why an init script and not <lib> in solrconfig.xml?
+#   Solr 10 dropped support for <lib> directives in solrconfig.xml. The
+#   supported way to expose a plugin JAR per-node is ${SOLR_HOME}/lib,
+#   and that path is solr-owned (writable from inside the container),
+#   so a tiny initdb script can `cp` the JAR there on container start.
+services:
+  solr:
+    image: solr:10
+    container_name: umich-solr-ext
+    ports:
+      - "8983:8983"
+    # No SOLR_MODULES needed: EXT does not use ICU / analysis-extras
+    # solr-precreate <coreName> <full-configset-path-with-conf-subdir>
+    # The path must point at a dir whose immediate child is `conf/`. We mount
+    # the project's test configset read-only at /opt/configs/test-core.
+    command:
+      - solr-precreate
+      - test-core
+      - /opt/configs/test-core
+    volumes:
+      # 1. The test-core configset (read-only: Solr never writes here)
+      - ../src/test/resources/solr-integration/test-core:/opt/configs/test-core:ro
+
+      # 2. Maven build output, read-only. The init script (#3) copies the
+      #    umich-solr-extensions JAR from here into ${SOLR_HOME}/lib so it
+      #    lands on Solr's node-level classloader.
+      - ../target:/opt/umich-ext:ro
+
+      # 3. Init script that runs once before solr-foreground.
+      - ./init-libs.sh:/docker-entrypoint-initdb.d/init-libs.sh:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - "wget -qO- 'http://localhost:8983/solr/admin/cores?action=STATUS&core=test-core' | grep -q '\"name\":\"test-core\"' || exit 1"
+      interval: 5s
+      timeout: 3s
+      retries: 24
+      start_period: 20s

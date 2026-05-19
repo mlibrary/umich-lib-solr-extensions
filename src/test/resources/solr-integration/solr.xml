@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<solr>
+  <!-- Minimal Solr home config for standalone integration tests. -->
+</solr>

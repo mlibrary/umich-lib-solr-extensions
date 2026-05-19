@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Test schema for umich-solr-extensions integration tests (EXT variant).
+
+  EXT does NOT include KeywordAwareICUFoldingFilter — that is absent from
+  this project. No SOLR_MODULES=analysis-extras needed.
+
+  AnalyzedString
+    Extends StrField; stores values pre-normalized through a referenced
+    TextField's index analysis chain. Useful for range queries on browse fields.
+
+  Filter factories are referenced by fully-qualified class name so the
+  schema works before the META-INF/services SPI file is in place.
+  Once the SPI file exists the short NAME aliases can be used instead.
+
+  LeftAnchoredSearchFilterFactory
+    Appends the 1-based token position to every term.
+    "Bill Dueber" → [Bill1, Dueber2]
+    Phrase matches are left-anchored: the query must start at position 1.
+
+  FullyAnchoredSearchFilterFactory
+    Like LeftAnchored but also appends "00" to the last token.
+    "Bill Dueber" → [Bill1, Dueber200]
+    Phrase matches must span the whole field value.
+
+  CallNumberSortKeyFieldType / CallnumberSortableFieldType
+    Both extend StrField; createField() normalises the value to a
+    collation sort key via AnyCallNumberSimple. Attributes allowTruncated
+    and passThroughOnError control fallback behaviour.
+-->
+<schema name="umich-ext-test" version="1.6">
+
+  <!-- ================================================================
+       Field types
+       ================================================================ -->
+
+  <fieldType name="string" class="solr.StrField" sortMissingLast="true"/>
+
+  <fieldType name="text_leftanchored" class="solr.TextField" positionIncrementGap="100">
+    <analyzer>
+      <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+      <!-- Use the fully-qualified name so this works before the SPI file is in place -->
+      <filter class="edu.umich.lib.solr.filter.LeftAnchoredSearchFilterFactory"/>
+    </analyzer>
+  </fieldType>
+
+  <fieldType name="text_fullyanchored" class="solr.TextField" positionIncrementGap="100">
+    <analyzer>
+      <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+      <filter class="edu.umich.lib.solr.filter.FullyAnchoredSearchFilterFactory"/>
+    </analyzer>
+  </fieldType>
+
+  <fieldType name="text_isbn" class="solr.TextField" positionIncrementGap="100">
+    <analyzer>
+      <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+      <filter class="edu.umich.lib.solr.filter.ISBNNormalizerFilterFactory"
+              echoInvalidInput="true"/>
+    </analyzer>
+  </fieldType>
+
+  <fieldType name="text_lccn" class="solr.TextField" positionIncrementGap="100">
+    <analyzer>
+      <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+      <filter class="edu.umich.lib.solr.filter.LCCNNormalizerFilterFactory"
+              echoInvalidInput="true"/>
+    </analyzer>
+  </fieldType>
+
+  <!-- Call-number filter factories: keyword tokenizer feeds the whole value to
+       the filter as a single token, which then emits its collation key. -->
+
+  <fieldType name="text_anycallnumber" class="solr.TextField">
+    <analyzer>
+      <tokenizer class="solr.KeywordTokenizerFactory"/>
+      <filter class="edu.umich.lib.solr.filter.AnyCallNumberSimpleFilterFactory"
+              allowTruncated="true" echoInvalidInput="true"/>
+    </analyzer>
+  </fieldType>
+
+  <fieldType name="text_lccallnumber" class="solr.TextField">
+    <analyzer>
+      <tokenizer class="solr.KeywordTokenizerFactory"/>
+      <filter class="edu.umich.lib.solr.filter.LCCallNumberSimpleFilterFactory"/>
+    </analyzer>
+  </fieldType>
+
+  <fieldType name="text_deweycallnumber" class="solr.TextField">
+    <analyzer>
+      <tokenizer class="solr.KeywordTokenizerFactory"/>
+      <filter class="edu.umich.lib.solr.filter.DeweyCallNumberSimpleFilterFactory"
+              allowTruncated="true" echoInvalidInput="true"/>
+    </analyzer>
+  </fieldType>
+
+  <!-- Call-number FieldType implementations (createField does the normalisation). -->
+
+  <fieldType name="callnumber_sortkey"  class="edu.umich.lib.solr.schema.CallNumberSortKeyFieldType"
+             allowTruncated="true" passThroughOnError="false"/>
+
+  <fieldType name="callnumber_sortable" class="edu.umich.lib.solr.schema.CallnumberSortableFieldType"
+             allowTruncated="true" passThroughOnError="false"/>
+
+  <!-- AnalyzedString: stores values pre-normalized through a reference TextField's
+       index analysis chain. Useful for range queries on browse fields. -->
+
+  <!-- The reference analyzer: keyword tokenizer → lowercase → ASCII fold.
+       analyzeMultiTerm uses the index analyzer, so we set it explicitly. -->
+  <fieldType name="text_browse_norm" class="solr.TextField">
+    <analyzer type="index">
+      <tokenizer class="solr.KeywordTokenizerFactory"/>
+      <filter class="solr.LowerCaseFilterFactory"/>
+      <filter class="solr.ASCIIFoldingFilterFactory"/>
+    </analyzer>
+    <analyzer type="query">
+      <tokenizer class="solr.KeywordTokenizerFactory"/>
+      <filter class="solr.LowerCaseFilterFactory"/>
+      <filter class="solr.ASCIIFoldingFilterFactory"/>
+    </analyzer>
+  </fieldType>
+
+  <fieldType name="analyzed_string_browse" class="edu.umich.lib.solr.schema.AnalyzedString"
+             fieldType="text_browse_norm"/>
+
+  <!-- ================================================================
+       Fields
+       ================================================================ -->
+
+  <field name="id"                  type="string"              indexed="true"  stored="true" required="true"/>
+  <field name="title_left"          type="text_leftanchored"   indexed="true"  stored="true"/>
+  <field name="title_full"          type="text_fullyanchored"  indexed="true"  stored="true"/>
+  <field name="isbn"                type="text_isbn"           indexed="true"  stored="true"/>
+  <field name="lccn"                type="text_lccn"           indexed="true"  stored="true"/>
+  <field name="callnumber_any"      type="text_anycallnumber"  indexed="true"  stored="true"/>
+  <field name="callnumber_lc"       type="text_lccallnumber"   indexed="true"  stored="true"/>
+  <field name="callnumber_dewey"    type="text_deweycallnumber" indexed="true" stored="true"/>
+  <field name="callnumber_sort"     type="callnumber_sortkey"  indexed="true"  stored="true"/>
+  <field name="callnumber_sortable" type="callnumber_sortable" indexed="true"  stored="true"/>
+  <field name="author_browse"      type="analyzed_string_browse" indexed="true" stored="true"/>
+
+  <uniqueKey>id</uniqueKey>
+
+</schema>
