@@ -1,4 +1,17 @@
-# Filter Inventory
+# Component Inventory
+
+## Sort Field Types
+
+Solr `FieldType` subclasses that normalise call numbers at index time for sort and display purposes.
+
+| Class | Use Case |
+|-------|----------|
+| `CallNumberSortKeyFieldType` | Extends `StrField`; `toInternal()` normalises any call number through `AnyCallNumberSimple` to produce a collation sort key. Supports `allowTruncated` (default `true`) and `passThroughOnError` (default `false`). Accepts a `}` field-delimiter to append extra sort data after the normalised key; uses `\u001F` as an end-of-callnumber sentinel so shorter keys sort before longer ones with the same prefix. |
+| `CallNumberSortableFieldType` | Extends `CallNumberSortKeyFieldType`; overrides `createField()` to store the **original display value** while indexing with `DOCS`-only options. Returns `null` (skips the field) when no usable key exists and `passThroughOnError=false`. Sort order is still provided by the inherited `toInternal()`. |
+
+---
+
+## Filters
 
 All filters are Lucene `TokenFilter` / `TokenFilterFactory` pairs operating at analysis time.
 
