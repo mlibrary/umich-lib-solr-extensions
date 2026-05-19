@@ -1,20 +1,5 @@
 # Component Inventory
 
-## Sort Field Types
-
-Solr `FieldType` subclasses that normalise call numbers at index time for sort and display purposes.
-
-| Class | Use Case |
-|-------|----------|
-| `CallNumberSortKeyFieldType` | Extends `StrField`; `toInternal()` normalises any call number through `AnyCallNumberSimple` to produce a collation sort key. Supports `allowTruncated` (default `true`) and `passThroughOnError` (default `false`). Accepts a `}` field-delimiter to append extra sort data after the normalised key; uses `\u001F` as an end-of-callnumber sentinel so shorter keys sort before longer ones with the same prefix. |
-| `CallNumberSortableFieldType` | Extends `CallNumberSortKeyFieldType`; overrides `createField()` to store the **original display value** while indexing with `DOCS`-only options. Returns `null` (skips the field) when no usable key exists and `passThroughOnError=false`. Sort order is still provided by the inherited `toInternal()`. |
-
----
-
-## Filters
-
-All filters are Lucene `TokenFilter` / `TokenFilterFactory` pairs operating at analysis time.
-
 ## Infrastructure
 
 | Class | Use Case |
@@ -22,14 +7,16 @@ All filters are Lucene `TokenFilter` / `TokenFilterFactory` pairs operating at a
 | `SimpleFilter` | Abstract base for 1-in/1-out token transforms; subclasses implement `munge(String)`. Supports `echoInvalidInput` to pass bad tokens through instead of dropping them. |
 | `SimpleFilterFactory` | Companion factory base; reads `echoInvalidInput` from schema args and forwards all args to the filter constructor. |
 
-## Call Number Normalization
+## Call Number
 
 | Class | Use Case |
 |-------|----------|
+| `CallNumberSortKeyFieldType` | Solr `StrField` subtype; `toInternal()` normalises any call number to a collation sort key via `AnyCallNumberSimple`. Supports `allowTruncated` (default `true`) and `passThroughOnError` (default `false`). Use for `callnumber_sort`-style fields. |
+| `CallNumberSortableFieldType` | Extends `CallNumberSortKeyFieldType`; stores the **original display value** while indexing with `DOCS`-only options. Use when the field also needs to be displayed. Returns `null` (skips) if no usable key exists and `passThroughOnError=false`. |
 | `LCCallNumberNormalizerFilter` | Normalizes LC Call Numbers to a sortable key for sort fields and left-anchored prefix search. |
 | `DeweyCallNumberNormalizerFilter` | Same as above for Dewey Decimal call numbers. |
 | `AnyCallNumberNormalizerFilter` | Auto-detects LC vs Dewey and normalizes accordingly — use when call number type is unknown at index time. |
-| `*Factory` (×3) | Schema wiring for the three call number filters above. |
+| `*Factory` (×3) | Schema wiring for the three call number normalizer filters above. |
 
 ## Identifier Normalization
 
