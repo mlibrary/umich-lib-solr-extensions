@@ -75,13 +75,16 @@ import java.util.Map;
  * through unchanged.
  *
  * <p>Required schema.xml attribute: {@code letter} — a single alphabetic character.
+ * <p>Optional schema.xml attribute: {@code reverse} (default {@code false}) — when
+ * {@code true}, the characters of the output are reversed before returning.
  *
- * <p>Example: {@code letter="a"} transforms {@code "apple"} → {@code "APPLE"}
- * and leaves {@code "banana"} untouched.
+ * <p>Example: {@code letter="a" reverse="false"} → {@code "apple"} → {@code "APPLE"}
+ * <p>Example: {@code letter="a" reverse="true"}  → {@code "apple"} → {@code "ELPPA"}
  */
 public class UpcaseWordsThatStartWithFilter extends SimpleFilter {
 
     private final char letter;
+    private final boolean reverse;
 
     public UpcaseWordsThatStartWithFilter(
             TokenStream in, boolean echoInvalidInput, Map<String, String> args) {
@@ -94,12 +97,14 @@ public class UpcaseWordsThatStartWithFilter extends SimpleFilter {
                     + "character, got: \"" + raw + "\"");
         }
         this.letter = Character.toLowerCase(raw.charAt(0));
+        this.reverse = Boolean.parseBoolean(getArg("reverse", "false"));
     }
 
     @Override
     public String munge(String input) {
         if (Character.toLowerCase(input.charAt(0)) == letter) {
-            return input.toUpperCase();
+            String result = input.toUpperCase();
+            return reverse ? new StringBuilder(result).reverse().toString() : result;
         }
         return input;   // pass through unchanged — do NOT return null
     }
@@ -143,7 +148,7 @@ com.example.solr.filter.UpcaseWordsThatStartWithFilterFactory
 ### schema.xml
 
 ```xml
-<!-- Uppercase every token starting with "a" or "A"; leave all others alone -->
+<!-- Uppercase tokens starting with "a"; leave all others alone -->
 <fieldType name="text_upcase_a" class="solr.TextField">
   <analyzer>
     <tokenizer class="solr.WhitespaceTokenizerFactory"/>
@@ -151,9 +156,20 @@ com.example.solr.filter.UpcaseWordsThatStartWithFilterFactory
             letter="a"/>
   </analyzer>
 </fieldType>
+
+<!-- Same, but also reverse the characters of matching tokens -->
+<fieldType name="text_upcase_a_reversed" class="solr.TextField">
+  <analyzer>
+    <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+    <filter class="com.example.solr.filter.UpcaseWordsThatStartWithFilterFactory"
+            letter="a" reverse="true"/>
+  </analyzer>
+</fieldType>
 ```
 
-Input `"apples and bananas"` → tokens `[APPLES, AND, bananas]`
+`"apples and bananas"` with `letter="a"`:
+- `reverse="false"` (default) → `[APPLES, and, bananas]`
+- `reverse="true"` → `[SELPPA, and, bananas]`
 
 ---
 
