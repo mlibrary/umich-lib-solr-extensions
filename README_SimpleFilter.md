@@ -179,7 +179,7 @@ Note that `"and"` also starts with `"a"`, so it is uppercased alongside `"apples
 
 Any attribute on the `<filter>` element is available inside the filter constructor via two
 `protected` methods inherited from `SimpleFilter`
-([`SimpleFilter.java`](src/main/java/edu/umich/lib/solr/filter/SimpleFilter.java#L96-L116)):
+(see `getArg` in `src/main/java/edu/umich/lib/solr/filter/SimpleFilter.java`):
 
 | Method | Behaviour |
 |--------|-----------|
