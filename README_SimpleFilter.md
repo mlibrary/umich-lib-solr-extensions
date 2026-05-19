@@ -27,16 +27,41 @@ upstream token stream
 ```
 
 - Return the **transformed string** to emit it.
-- Return **`null`** to signal that the token is invalid. The token is then
-  dropped (default) or echoed unchanged (`echoInvalidInput="true"`).
-- Empty and null tokens from upstream are passed through as-is without
-  calling `munge`.
+- Return **`null`** to signal that the token is **invalid** and should be discarded.
+  The token is then dropped (default) or echoed unchanged (`echoInvalidInput="true"`).
+- Empty and null tokens from upstream are passed through as-is without calling `munge`.
+
+> **`null` means "invalid", not "no change needed".**  
+> To pass a token through untransformed, return the original string.
+> Returning `null` is for cases where the token is genuinely bad — unparseable ISBNs,
+> call numbers that cannot be normalized, etc.
 
 ---
 
-## Writing a filter
+## Example: `UpcaseWordsThatStartWith`
 
-Extend `SimpleFilter` and override `munge`:
+This filter uppercases every token that begins with a configurable letter and leaves all
+other tokens unchanged. A required schema.xml attribute `letter` supplies the letter.
+
+### Design notes
+
+**`munge` returns the original string for non-matching tokens, not `null`.**  
+Returning `null` would drop them from the token stream. The `null`/drop contract is for
+genuinely invalid input, not for "this token didn't match my predicate".
+
+**`letter` is validated in the constructor.**  
+If the attribute is missing or is not a single letter, the filter throws immediately at
+Solr core load time — before any documents are indexed — with a descriptive message.
+
+**`echoInvalidInput` has no effect here.**  
+Because `munge` never returns `null`, there is nothing to drop or echo. The parameter is
+harmless but irrelevant. Filters where all tokens are either transformed or passed through
+unchanged do not need `echoInvalidInput`.
+
+**The letter comparison is case-insensitive.**  
+`letter="a"` matches tokens starting with both `"a"` and `"A"`.
+
+### Filter class
 
 ```java
 package com.example.solr.filter;
@@ -46,30 +71,42 @@ import org.apache.lucene.analysis.TokenStream;
 import java.util.Map;
 
 /**
- * Uppercases every token.  Returns null (drops) if the token contains a digit.
+ * Uppercases tokens that begin with a configured letter; all other tokens pass
+ * through unchanged.
+ *
+ * <p>Required schema.xml attribute: {@code letter} — a single alphabetic character.
+ *
+ * <p>Example: {@code letter="a"} transforms {@code "apple"} → {@code "APPLE"}
+ * and leaves {@code "banana"} untouched.
  */
-public class UpperCaseFilter extends SimpleFilter {
+public class UpcaseWordsThatStartWithFilter extends SimpleFilter {
 
-    public UpperCaseFilter(TokenStream in, boolean echoInvalidInput, Map<String, String> args) {
+    private final char letter;
+
+    public UpcaseWordsThatStartWithFilter(
+            TokenStream in, boolean echoInvalidInput, Map<String, String> args) {
         super(in, echoInvalidInput, args);
-        // read optional schema.xml params with getArg("paramName", "default")
+
+        String raw = getArg("letter");   // throws if absent
+        if (raw.length() != 1 || !Character.isLetter(raw.charAt(0))) {
+            throw new IllegalArgumentException(
+                    "UpcaseWordsThatStartWithFilter: 'letter' must be a single alphabetic "
+                    + "character, got: \"" + raw + "\"");
+        }
+        this.letter = Character.toLowerCase(raw.charAt(0));
     }
 
     @Override
     public String munge(String input) {
-        if (input.chars().anyMatch(Character::isDigit)) {
-            return null;   // signals "invalid" — drop or echo per echoInvalidInput
+        if (Character.toLowerCase(input.charAt(0)) == letter) {
+            return input.toUpperCase();
         }
-        return input.toUpperCase();
+        return input;   // pass through unchanged — do NOT return null
     }
 }
 ```
 
----
-
-## Writing the factory
-
-Extend `SimpleFilterFactory` and pass the args through:
+### Factory class
 
 ```java
 package com.example.solr.filter;
@@ -78,80 +115,59 @@ import edu.umich.lib.solr.filter.SimpleFilterFactory;
 import org.apache.lucene.analysis.TokenStream;
 import java.util.Map;
 
-public class UpperCaseFilterFactory extends SimpleFilterFactory {
+public class UpcaseWordsThatStartWithFilterFactory extends SimpleFilterFactory {
 
-    public static final String NAME = "upperCase";   // SPI alias for schema.xml
+    public static final String NAME = "upcaseWordsThatStartWith";
 
-    public UpperCaseFilterFactory(Map<String, String> args) {
+    public UpcaseWordsThatStartWithFilterFactory(Map<String, String> args) {
         super(args);
     }
 
     @Override
-    public UpperCaseFilter create(TokenStream in) {
-        return new UpperCaseFilter(in, getEchoInvalidInput(), getFilterArgs());
+    public UpcaseWordsThatStartWithFilter create(TokenStream in) {
+        return new UpcaseWordsThatStartWithFilter(in, getEchoInvalidInput(), getFilterArgs());
     }
 }
 ```
 
-Register the factory with Lucene's `ServiceLoader` by adding a line to:
+Register in:
 
 ```
 src/main/resources/META-INF/services/org.apache.lucene.analysis.TokenFilterFactory
 ```
 
 ```
-com.example.solr.filter.UpperCaseFilterFactory
+com.example.solr.filter.UpcaseWordsThatStartWithFilterFactory
 ```
 
-Once registered the SPI `NAME` alias can be used in `schema.xml`; before registration (or in
-tests) use the fully-qualified class name.
-
----
-
-## Using it in schema.xml
+### schema.xml
 
 ```xml
-<!-- echoInvalidInput="true": tokens containing digits are kept as-is -->
-<fieldType name="text_upper" class="solr.TextField">
+<!-- Uppercase every token starting with "a" or "A"; leave all others alone -->
+<fieldType name="text_upcase_a" class="solr.TextField">
   <analyzer>
     <tokenizer class="solr.WhitespaceTokenizerFactory"/>
-    <filter class="com.example.solr.filter.UpperCaseFilterFactory"
-            echoInvalidInput="true"/>
-  </analyzer>
-</fieldType>
-
-<!-- echoInvalidInput="false" (default): tokens containing digits are dropped -->
-<fieldType name="text_upper_strict" class="solr.TextField">
-  <analyzer>
-    <tokenizer class="solr.WhitespaceTokenizerFactory"/>
-    <filter class="com.example.solr.filter.UpperCaseFilterFactory"/>
+    <filter class="com.example.solr.filter.UpcaseWordsThatStartWithFilterFactory"
+            letter="a"/>
   </analyzer>
 </fieldType>
 ```
+
+Input `"apples and bananas"` → tokens `[APPLES, AND, bananas]`
 
 ---
 
 ## Reading extra parameters from schema.xml
 
-Any attribute you add to the `<filter>` element in `schema.xml` is available inside the filter
-via `getArg`:
+Any attribute on the `<filter>` element is available inside the filter via `getArg`:
 
-```xml
-<filter class="com.example.solr.filter.UpperCaseFilterFactory"
-        echoInvalidInput="true"
-        locale="tr"/>
-```
+| Method | Behaviour |
+|--------|-----------|
+| `getArg("key")` | Returns the value; throws `IllegalArgumentException` if absent |
+| `getArg("key", "default")` | Returns the value, or `"default"` if absent; never returns `null` |
 
-```java
-public UpperCaseFilter(TokenStream in, boolean echoInvalidInput, Map<String, String> args) {
-    super(in, echoInvalidInput, args);
-    String locale = getArg("locale", "en");      // optional, default "en"
-    String required = getArg("requiredParam");    // throws if absent
-}
-```
-
-`echoInvalidInput` is consumed by `SimpleFilterFactory` and does **not** appear in `getFilterArgs()` /
-`getArg`. All other attributes are forwarded.
+`echoInvalidInput` is consumed by `SimpleFilterFactory` and does **not** appear in
+`getFilterArgs()` / `getArg`. All other attributes are forwarded.
 
 ---
 
