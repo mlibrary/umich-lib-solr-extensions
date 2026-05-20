@@ -29,6 +29,13 @@ public class AnalyzedString extends StrField {
   IndexSchema schema;
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
+  /**
+   * Initializes the field type, extracting the required {@code fieldType} argument.
+   *
+   * @param s    the current {@link IndexSchema}
+   * @param args the field-type configuration arguments from {@code schema.xml}
+   * @throws SolrException if the {@code fieldType} argument is absent
+   */
   protected void init(IndexSchema s, Map<String, String> args) {
     schema = s;
     super.init(schema, args);
@@ -40,6 +47,14 @@ public class AnalyzedString extends StrField {
     }
   }
 
+  /**
+   * Normalizes {@code val} by running it through the index analyzer of the
+   * configured field type.
+   *
+   * @param val the raw field value
+   * @return the single term produced by the named field type's index analyzer
+   * @throws SolrException if the named field type does not exist in the schema
+   */
   @Override
   public String toInternal(String val) {
     try {

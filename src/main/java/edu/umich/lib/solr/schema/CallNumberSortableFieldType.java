@@ -31,6 +31,20 @@ public class CallNumberSortableFieldType extends CallNumberSortKeyFieldType {
     return false;
   }
 
+  /**
+   * Creates a Lucene field that stores the original call-number text and
+   * indexes it with {@link IndexOptions#DOCS}-only options (no term
+   * frequencies or positions).
+   *
+   * <p>Returns {@code null} when the field is neither indexed nor stored,
+   * or when the call number has no usable key in any format.
+   *
+   * @param field the Solr schema field definition
+   * @param value the document value to index; {@link Object#toString()} is
+   *              called to obtain the string form
+   * @return a new {@link IndexableField}, or {@code null} if the value
+   *         should not be indexed
+   */
   @Override
   public IndexableField createField(SchemaField field, Object value) {
     if (!field.indexed() && !field.stored()) {

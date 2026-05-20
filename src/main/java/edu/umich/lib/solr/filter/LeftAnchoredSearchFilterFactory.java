@@ -45,6 +45,7 @@ public class LeftAnchoredSearchFilterFactory extends TokenFilterFactory {
         super(args);
     }
 
+    /** {@inheritDoc} Creates a {@link LeftAnchoredSearchFilter}. */
     @Override
     public LeftAnchoredSearchFilter create(TokenStream input) {
         return new LeftAnchoredSearchFilter(input);

@@ -29,6 +29,7 @@ public class ISBNNormalizerFilterFactory extends SimpleFilterFactory {
         super(args);
     }
 
+    /** {@inheritDoc} Creates an {@link ISBNNormalizerFilter}. */
     @Override
     public ISBNNormalizerFilter create(TokenStream in) {
         return new ISBNNormalizerFilter(in, getEchoInvalidInput(), getFilterArgs());

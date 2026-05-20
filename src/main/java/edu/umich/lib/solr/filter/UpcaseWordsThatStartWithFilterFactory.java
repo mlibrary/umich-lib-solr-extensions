@@ -55,6 +55,7 @@ public class UpcaseWordsThatStartWithFilterFactory extends SimpleFilterFactory {
         }
     }
 
+    /** {@inheritDoc} Creates an {@link UpcaseWordsThatStartWithFilter}. */
     @Override
     public UpcaseWordsThatStartWithFilter create(TokenStream in) {
         return new UpcaseWordsThatStartWithFilter(in, getEchoInvalidInput(), getFilterArgs());
