@@ -54,6 +54,7 @@ public class AnyCallNumberNormalizerFilterFactory extends SimpleFilterFactory {
         super(normalizeArgs(args));
     }
 
+    /** {@inheritDoc} Creates an {@link AnyCallNumberNormalizerFilter}. */
     @Override
     public AnyCallNumberNormalizerFilter create(TokenStream input) {
         return new AnyCallNumberNormalizerFilter(input, getEchoInvalidInput(), getFilterArgs());

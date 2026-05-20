@@ -80,6 +80,13 @@ public class SimpleFilterFactory extends TokenFilterFactory {
         return filterArgs;
     }
 
+    /**
+     * Creates a base {@link SimpleFilter} wrapping the given token stream.
+     * Subclasses override this method to return a more specific filter type.
+     *
+     * @param input the upstream {@link TokenStream}
+     * @return a new {@link SimpleFilter} configured with this factory's arguments
+     */
     @Override
     public SimpleFilter create(TokenStream input) {
         return new SimpleFilter(input, echoInvalidInput, filterArgs);

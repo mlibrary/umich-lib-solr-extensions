@@ -76,11 +76,35 @@ public abstract class AbstractCallNumber {
         return null;
     }
 
+    /**
+     * Returns the best available key for this call number, preferring validity over
+     * truncation, and echoing the invalid key as a last resort.
+     *
+     * <p>Equivalent to {@code bestKey(true, true)}.
+     *
+     * @return the best available key; never {@code null}
+     */
     public String bestKey() {
         return bestKey(true, true);
     }
 
-
+    /**
+     * Returns the best available key for this call number according to the given policy.
+     *
+     * <ol>
+     *   <li>Returns {@link #validKey()} if {@link #hasValidKey()} is {@code true}.</li>
+     *   <li>Returns {@link #acceptableTruncatedKey()} if {@code allowTruncated} is
+     *       {@code true} and {@link #hasAcceptableTruncatedKey()} is {@code true}.</li>
+     *   <li>Returns {@link #invalidKey()} if {@code echoInvalidInput} is {@code true}.</li>
+     *   <li>Returns {@code null} if none of the above conditions are met.</li>
+     * </ol>
+     *
+     * @param allowTruncated   when {@code true}, an acceptable truncated key may be
+     *                         returned if no valid key is available
+     * @param echoInvalidInput when {@code true}, the processed invalid key is returned
+     *                         as a final fallback
+     * @return the best available key under the given policy, or {@code null}
+     */
     public String bestKey(boolean allowTruncated, boolean echoInvalidInput) {
         if (hasValidKey()) return validKey();
         if (allowTruncated && hasAcceptableTruncatedKey()) return acceptableTruncatedKey();
@@ -105,6 +129,14 @@ public abstract class AbstractCallNumber {
             "^\\p{Punct}*(.*?)\\p{Punct}*$"
     );
 
+    /**
+     * Removes leading and trailing punctuation characters from {@code str}.
+     *
+     * @param str the string to process
+     * @return {@code str} with leading and trailing punctuation stripped,
+     *         or the original string unchanged if it contains no punctuation
+     *         boundary
+     */
     public String trimPunctuation(String str) {
         Matcher m = TRIM_PUNCT.matcher(str);
         if (m.matches()) {
@@ -114,6 +146,13 @@ public abstract class AbstractCallNumber {
         }
     }
 
+    /**
+     * Trims leading/trailing whitespace and collapses any run of internal
+     * whitespace characters to a single space.
+     *
+     * @param str the string to process
+     * @return the normalized string
+     */
     public String collapseSpaces(String str) {
         return str.trim().replaceAll("\\s+", " ");
     }

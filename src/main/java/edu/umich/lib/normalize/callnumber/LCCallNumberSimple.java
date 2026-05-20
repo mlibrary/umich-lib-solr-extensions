@@ -7,6 +7,18 @@ import java.lang.invoke.MethodHandles;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Parses a Library of Congress (LC) call number into its structural components
+ * and produces a sortable collation key.
+ *
+ * <p>A valid LC call number consists of 1-3 classification letters (one or two
+ * Unicode letters, a {@code K}-prefixed law string of up to 3 letters, or the
+ * literal string {@code LAW}), followed by 1-5 class digits, an optional
+ * decimal subdivision, and arbitrary trailing text.</p>
+ *
+ * <p>The collation key encodes the digit portion with a length prefix so that,
+ * for example, {@code QA9} sorts before {@code QA10}.</p>
+ */
 public class LCCallNumberSimple extends AbstractCallNumber {
 
     public String letters = "";
@@ -23,7 +35,6 @@ public class LCCallNumberSimple extends AbstractCallNumber {
     public static String LETTER_PAT = "(?<letters>(?:LAW|law|Law|[Kk]\\p{L}{0,2}|\\p{L}{1,2}))";
 
     public static Pattern LC_START = Pattern.compile(
-//      "^\\s*(?<letters>[KkLl]?\\p{L}{1,2})[-\\s]*" + // 1-2 (3 in the Ks) initial letters, plus optional whitespace
             "^\\s*" + LETTER_PAT + "\\s*" +
                     "(?<digits>\\d{1,5}(?!\\d))" +                  // 1-5 digits
                     "(?:\\.(?<decimals>\\d+))?" +   // an optional decimal ('.' plus digits)
@@ -35,7 +46,6 @@ public class LCCallNumberSimple extends AbstractCallNumber {
     // That can be a single letter, any two-letter combination, or a set of three
     // letters starting with "K" (books about legal issues) or "L" (more of the same).
     // @TODO Put a guard around letter-only queries so we only accept them when an argument to the constructor says to.
-//  public static Pattern ACCEPTABLE_ONLY_LETTERS = Pattern.compile("^\\p{L}{1,3}$");
 
     public static Pattern ACCEPTABLE_ONLY_LETTERS = Pattern.compile(LETTER_PAT + "\\s*$");
 
@@ -58,16 +68,26 @@ public class LCCallNumberSimple extends AbstractCallNumber {
         }
     }
 
+    /** @return {@code true} if the input matched the LC call-number pattern */
     @Override
     public Boolean hasValidKey() {
         return isValid;
     }
 
+    /** @return the sortable collation key, or {@code null} if the parse failed */
     @Override
     public String validKey() {
         return collationKey();
     }
 
+    /**
+     * Builds the sortable collation key as:
+     * {@code letters + len(digits) + digits [+ "." + decimals] [+ " " + rest]}.
+     * The length-prefix on the digit segment ensures lexicographic order matches
+     * numeric order (e.g. {@code QA9} &lt; {@code QA10}).
+     *
+     * @return the collation key, or {@code null} if the call number is invalid
+     */
     public String collationKey() {
         if (isValid) {
             String key = collationLetters() + collationDigits() + collationDecimals() + collationRest();
@@ -77,11 +97,20 @@ public class LCCallNumberSimple extends AbstractCallNumber {
         }
     }
 
+    /**
+     * @return {@code true} if the input consists solely of LC classification
+     *         letters (optionally surrounded by whitespace), making it a valid
+     *         prefix for a range query such as {@code [QA TO QB]}
+     */
     @Override
     public Boolean hasAcceptableTruncatedKey() {
         return isAcceptableTruncatedCallnumber(original);
     }
 
+    /**
+     * @return the trimmed, lower-cased original string when it is an
+     *         acceptable letter-only truncated query; otherwise {@code null}
+     */
     @Override
     public String acceptableTruncatedKey() {
         if (hasAcceptableTruncatedKey()) {
@@ -91,6 +120,10 @@ public class LCCallNumberSimple extends AbstractCallNumber {
         }
     }
 
+    /**
+     * @return a cleaned-up freetext representation of the call number suitable
+     *         for sorting unrecognised strings alongside valid ones
+     */
     @Override
     public String invalidKey() {
         return cleanupFreetext(trimmedOriginal);

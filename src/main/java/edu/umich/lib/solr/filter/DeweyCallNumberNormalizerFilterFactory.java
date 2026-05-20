@@ -39,6 +39,7 @@ public class DeweyCallNumberNormalizerFilterFactory extends SimpleFilterFactory 
         super(normalizeArgs(args));
     }
 
+    /** {@inheritDoc} Creates a {@link DeweyCallNumberNormalizerFilter}. */
     @Override
     public DeweyCallNumberNormalizerFilter create(TokenStream input) {
         return new DeweyCallNumberNormalizerFilter(input, getEchoInvalidInput(), getFilterArgs());

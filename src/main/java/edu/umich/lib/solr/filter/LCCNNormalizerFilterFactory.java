@@ -29,6 +29,7 @@ public class LCCNNormalizerFilterFactory extends SimpleFilterFactory {
         super(args);
     }
 
+    /** {@inheritDoc} Creates an {@link LCCNNormalizerFilter}. */
     @Override
     public LCCNNormalizerFilter create(TokenStream in) {
         return new LCCNNormalizerFilter(in, getEchoInvalidInput(), getFilterArgs());

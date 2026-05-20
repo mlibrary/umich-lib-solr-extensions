@@ -45,6 +45,7 @@ public class FullyAnchoredSearchFilterFactory extends TokenFilterFactory {
         super(args);
     }
 
+    /** {@inheritDoc} Creates a {@link FullyAnchoredSearchFilter}. */
     @Override
     public FullyAnchoredSearchFilter create(TokenStream input) {
         return new FullyAnchoredSearchFilter(input);

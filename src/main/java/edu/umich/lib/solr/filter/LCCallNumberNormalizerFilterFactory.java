@@ -54,6 +54,7 @@ public class LCCallNumberNormalizerFilterFactory extends SimpleFilterFactory {
         super(normalizeArgs(args));
     }
 
+    /** {@inheritDoc} Creates an {@link LCCallNumberNormalizerFilter}. */
     @Override
     public LCCallNumberNormalizerFilter create(TokenStream input) {
         return new LCCallNumberNormalizerFilter(input, getEchoInvalidInput(), getFilterArgs());

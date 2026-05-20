@@ -52,15 +52,22 @@ public class DeweySimple extends AbstractCallNumber {
 
   }
 
+  /** @return {@code true} if the input matched the three-digit Dewey pattern */
   @Override
   public Boolean hasValidKey() {
     return isValid;
   }
+  /** @return the sortable collation key, or {@code null} if the parse failed */
   @Override
   public String validKey() {
     return collationKey();
   }
 
+  /**
+   * Builds the sortable collation key as {@code trimPunctuation(digits + decimals + rest)}.
+   *
+   * @return the collation key, or {@code null} if the call number is invalid
+   */
   public String collationKey() {
     if (isValid) {
       return trimPunctuation(digits + decimals + rest);
@@ -69,11 +76,20 @@ public class DeweySimple extends AbstractCallNumber {
     }
   }
 
+  /**
+   * @return {@code true} if the input is exactly three digits (optionally
+   *         surrounded by whitespace), making it a valid prefix for a range
+   *         query (e.g. {@code [500 TO 600]})
+   */
   @Override
   public Boolean hasAcceptableTruncatedKey() {
     return isValidTruncatedQuery(trimmedOriginal);
   }
 
+  /**
+   * @return the trimmed, lower-cased original string when it is a valid
+   *         three-digit truncated query; otherwise {@code null}
+   */
   @Override
   public String acceptableTruncatedKey() {
     if (isValidTruncatedQuery(trimmedOriginal)) {
@@ -83,6 +99,10 @@ public class DeweySimple extends AbstractCallNumber {
     }
   }
 
+  /**
+   * @return a cleaned-up freetext representation of the call number suitable
+   *         for sorting unrecognised strings alongside valid ones
+   */
   @Override
   public String invalidKey() {
     return cleanupFreetext(trimmedOriginal);
@@ -113,6 +133,14 @@ public class DeweySimple extends AbstractCallNumber {
     return str.replaceAll("(\\p{L})\\.(\\p{L})", "$1$2");
   }
 
+  /**
+   * Replaces a dot that immediately follows a letter with a space, removing
+   * abbreviated-name dots that should not be treated as decimal points
+   * (e.g. {@code "M.A."} becomes {@code "M A "}).
+   *
+   * @param str the string to process
+   * @return the string with letter-dots replaced by spaces
+   */
   public String ditchDotsAfterLetters(String str) {
     return str.replaceAll("(\\p{L})\\.", "$1 ");
   }

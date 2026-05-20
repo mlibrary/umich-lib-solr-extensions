@@ -128,6 +128,19 @@ public class SimpleFilter extends TokenFilter {
         return input;
     }
 
+    /**
+     * Advances to the next output token by consuming upstream tokens and
+     * running each through {@link #munge(String)}.
+     *
+     * <p>Tokens for which {@code munge} returns {@code null} are either
+     * passed through unchanged (when {@code echoInvalidInput} is {@code true})
+     * or silently dropped (when it is {@code false}).  Blank tokens are always
+     * passed through unchanged.
+     *
+     * @return {@code true} if an output token was produced; {@code false} when
+     *         the upstream stream is exhausted
+     * @throws IOException if the upstream token stream throws
+     */
     @Override
     public final boolean incrementToken() throws IOException {
         while (input.incrementToken()) {

@@ -9,6 +9,24 @@ import org.slf4j.LoggerFactory;
 import java.lang.invoke.MethodHandles;
 import java.util.Map;
 
+/**
+ * A Solr {@link StrField} subtype that converts a raw call number into a
+ * sortable collation key using {@link AnyCallNumberSimple}.
+ *
+ * <p>The stored value combines the normalized call-number key, an
+ * end-of-call-number sentinel ({@code \u001F}), the field delimiter
+ * ({@code }}), and any additional fields bundled in the original value.
+ *
+ * <p>Optional schema attributes:
+ * <ul>
+ *   <li>{@code allowTruncated} (default {@code true}) — whether letter- or
+ *       digit-only prefixes that do not form a fully valid call number are
+ *       accepted as truncated range-query endpoints.</li>
+ *   <li>{@code echoInvalidInput} (default {@code false}) — whether
+ *       unrecognised call numbers are indexed as a cleaned-up freetext key
+ *       instead of being silently dropped.</li>
+ * </ul>
+ */
 public class CallNumberSortKeyFieldType extends StrField {
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
   protected Boolean allowTruncated = true;
@@ -25,7 +43,7 @@ public class CallNumberSortKeyFieldType extends StrField {
 
     String trunc = args.remove("allowTruncated");
     if (trunc != null) {
-      allowTruncated = true;
+      allowTruncated = Boolean.parseBoolean(trunc);
     }
     String ptoe = args.remove("echoInvalidInput");
     if (ptoe != null) {
@@ -35,6 +53,19 @@ public class CallNumberSortKeyFieldType extends StrField {
   }
 
 
+  /**
+   * Normalizes a call-number value (optionally with appended bundled fields)
+   * to its sortable form.
+   *
+   * <p>The input may contain a {@code }} delimiter; everything before the
+   * first delimiter is treated as the call number and everything after as
+   * appended fields that are re-bundled into the output unchanged.
+   *
+   * @param val the raw value from the document, optionally containing
+   *            {@code }} followed by additional fields
+   * @return the sortable, bundled value; or {@code null} when the call number
+   *         is unrecognised and {@code echoInvalidInput} is {@code false}
+   */
   @Override
   public String toInternal(String val) {
     String[] fields = val.split(FIELD_DELIMITER, 2);
@@ -62,6 +93,19 @@ public class CallNumberSortKeyFieldType extends StrField {
   }
 
 
+  /**
+   * Assembles the final stored value as
+   * {@code normalizedCn + END_OF_CALLNUMBER + FIELD_DELIMITER + appendedField}.
+   *
+   * <p>{@code END_OF_CALLNUMBER} ({@code \u001F}) sorts before any printable
+   * character so that a bare call number sorts before the same call number
+   * with sub-fields appended.  {@code FIELD_DELIMITER} ({@code }}) sorts
+   * after letters and digits so that call-number segments sort correctly.
+   *
+   * @param normalizedCn the collation key produced by the call-number parser
+   * @param appendedField any additional fields that were bundled in the raw value
+   * @return the complete, delimited sort key
+   */
   public String bundledFields(String normalizedCn, String appendedField) {
     return normalizedCn + END_OF_CALLNUMBER + FIELD_DELIMITER + appendedField;
   }
