@@ -21,7 +21,7 @@ Dewey call numbers without the caller needing to know which scheme is in use. Us
 need to display the raw call number (e.g., a browseable call-number field). Fields are typically
 `multiValued="true"` to support records with multiple call numbers.
 
-`echoInvalidInput="true"` keeps records that have unrecognizable call numbers — the raw value is
+`echoInvalidInput="true"` keeps records that have unrecognizable call numbers  -- the raw value is
 stored/indexed as-is, which keeps the record visible but may produce unexpected sort order.
 `echoInvalidInput="false"` (the default) silently omits the field for unrecognizable values.
 
@@ -67,15 +67,15 @@ alongside a stored display field.
 Analysis-chain filters that emit a normalized collation key for a call number token. Because the
 entire call number must be treated as a single token, always pair with `KeywordTokenizerFactory`.
 
-- `AnyCallNumberNormalizerFilterFactory` — auto-detects LC vs Dewey; use when scheme is unknown.
-- `LCCallNumberNormalizerFilterFactory` — LC only; drops tokens that are not valid LC call numbers
+- `AnyCallNumberNormalizerFilterFactory`  -- auto-detects LC vs Dewey; use when scheme is unknown.
+- `LCCallNumberNormalizerFilterFactory`  -- LC only; drops tokens that are not valid LC call numbers
   (unless `echoInvalidInput="true"`).
-- `DeweyCallNumberNormalizerFilterFactory` — Dewey only; same drop/pass-through behaviour.
+- `DeweyCallNumberNormalizerFilterFactory`  -- Dewey only; same drop/pass-through behaviour.
 
 `allowTruncated="true"` accepts partially-specified call numbers (e.g., letters-only prefix
 searches); use it in query analyzers when you want to support prefix queries.
 
-**Exact-match / normalized-key search** — both index and query analyzers are identical:
+**Exact-match / normalized-key search**  -- both index and query analyzers are identical:
 
 ```xml
 <fieldType name="callnumber_any" class="solr.TextField">
@@ -87,7 +87,7 @@ searches); use it in query analyzers when you want to support prefix queries.
 </fieldType>
 ```
 
-**Prefix / starts-with search** — add `EdgeNGramFilterFactory` at index time only; the query
+**Prefix / starts-with search**  -- add `EdgeNGramFilterFactory` at index time only; the query
 analyzer just normalizes the prefix query without generating grams:
 
 ```xml
@@ -138,7 +138,7 @@ would work only for single-ISBN fields.
 
 Normalizes Library of Congress Control Numbers to their canonical form (strips leading zeros,
 expands two-digit year prefixes, lowercases alphabetic prefixes, etc.). Unlike the ISBN filter,
-tokens that do not match the LCCN pattern are always passed through — there is no `echoInvalidInput`
+tokens that do not match the LCCN pattern are always passed through  -- there is no `echoInvalidInput`
 drop behaviour for LCCNs.
 
 ```xml
@@ -160,27 +160,27 @@ Both filters add a **numeric position suffix** to every token so that a standard
 becomes position-anchored. They are designed to be dropped into an ordinary `TextField` analysis
 chain after tokenization and any normalization you want.
 
+**Matching is at the token level.** A query token must equal an indexed token exactly; there is no
+within-token prefix matching. With `WhitespaceTokenizerFactory`, `"Bill Dueber"` and `"Bill Dueb"`
+are different tokens  -- a query containing `"Dueb"` will not match a field containing `"Dueber"`.
+
 ### LeftAnchoredSearchFilter
 
 Appends the 1-based stream position to every term:
-`"War and Peace"` → `[War1, and2, Peace3]`
+`"War and Peace"` -> `[War1, and2, Peace3]`
 
-A phrase query `"War and"` matches only documents where those words start at position 1 — i.e.,
-the field value *begins with* the query. Use for left-anchored browse (title starts-with, author
-starts-with) where you want `"Dickens, C"` to match `"Dickens, Charles"` but not
-`"About Dickens, Charles"`.
+A phrase query `"War and"` matches only documents where those words start at position 1  -- i.e.,
+the field value *begins with* the query tokens. Use for left-anchored browse (title starts-with,
+author starts-with) where you want `"Dickens,"` to match `"Dickens, Charles"` but not
+`"About Dickens, Charles"`. A query for `"Dickens, Char"` would not match `"Dickens, Charles"`
+because `Char` and `Charles` are different tokens.
 
-Use **split analyzers** so the index gets position suffixes but the query analyzer produces the same
-suffixed form for matching:
+Both analyzers must apply the filter so that indexed tokens and query tokens carry the same position
+suffixes:
 
 ```xml
 <fieldType name="title_leftanchored" class="solr.TextField" positionIncrementGap="100">
-  <analyzer type="index">
-    <tokenizer class="solr.WhitespaceTokenizerFactory"/>
-    <filter class="solr.LowerCaseFilterFactory"/>
-    <filter class="edu.umich.lib.solr.filter.LeftAnchoredSearchFilterFactory"/>
-  </analyzer>
-  <analyzer type="query">
+  <analyzer>
     <tokenizer class="solr.WhitespaceTokenizerFactory"/>
     <filter class="solr.LowerCaseFilterFactory"/>
     <filter class="edu.umich.lib.solr.filter.LeftAnchoredSearchFilterFactory"/>
@@ -195,21 +195,16 @@ suffixed form for matching:
 ### FullyAnchoredSearchFilter
 
 Like `LeftAnchoredSearchFilter` but also appends `"00"` to the **last** token in the stream:
-`"War and Peace"` → `[War1, and2, Peace300]`
+`"War and Peace"` -> `[War1, and2, Peace300]`
 
-A phrase query must match both the start (`position 1`) and the special end sentinel (`…00`) to
+A phrase query must match both the start (`position 1`) and the special end sentinel (`...00`) to
 succeed, so the query must span the *entire* field value. Use for exact-title or exact-authority
-searches where partial matches are wrong (e.g., a browse index where `"Dickens, Charles"` must not
-match a query for `"Dickens, C"`).
+searches where partial matches are wrong (e.g., a browse index where a query for `"Dickens,"`
+must not match `"Dickens, Charles"`).
 
 ```xml
 <fieldType name="title_fullanchored" class="solr.TextField" positionIncrementGap="100">
-  <analyzer type="index">
-    <tokenizer class="solr.WhitespaceTokenizerFactory"/>
-    <filter class="solr.LowerCaseFilterFactory"/>
-    <filter class="edu.umich.lib.solr.filter.FullyAnchoredSearchFilterFactory"/>
-  </analyzer>
-  <analyzer type="query">
+  <analyzer>
     <tokenizer class="solr.WhitespaceTokenizerFactory"/>
     <filter class="solr.LowerCaseFilterFactory"/>
     <filter class="edu.umich.lib.solr.filter.FullyAnchoredSearchFilterFactory"/>
@@ -227,7 +222,7 @@ match a query for `"Dickens, C"`).
 
 Extends `StrField`; **stores values pre-normalized** through a referenced `TextField`'s index
 analysis chain. Unlike `TextField`, `AnalyzedString` stores a single, analysis-chain-normalized
-string rather than inverted posting lists — it behaves like a `StrField` for exact-match and range
+string rather than inverted posting lists  -- it behaves like a `StrField` for exact-match and range
 queries but the stored (and indexed) string has been folded/normalized by your chosen analyzer.
 
 Useful for **browse fields** where you want to store the normalized form for display (e.g., in a
@@ -240,12 +235,7 @@ normalization:
 ```xml
 <!-- 1. Define the normalization logic in a plain TextField -->
 <fieldType name="text_browse_norm" class="solr.TextField">
-  <analyzer type="index">
-    <tokenizer class="solr.KeywordTokenizerFactory"/>
-    <filter class="solr.LowerCaseFilterFactory"/>
-    <filter class="solr.ASCIIFoldingFilterFactory"/>
-  </analyzer>
-  <analyzer type="query">
+  <analyzer>
     <tokenizer class="solr.KeywordTokenizerFactory"/>
     <filter class="solr.LowerCaseFilterFactory"/>
     <filter class="solr.ASCIIFoldingFilterFactory"/>
