@@ -52,78 +52,97 @@ abstract class AbstractLiveIT {
   static final String BASE_URL;
 
   static {
+    GenericContainer<?> solr = initSolrContainer();
+    SOLR = solr;
+    BASE_URL = (solr != null)
+        ? "http://" + solr.getHost() + ":" + solr.getMappedPort(SOLR_PORT) + "/solr"
+        : null;
+  }
+
+  /**
+   * Initialises and starts the Solr container, or returns {@code null} if the
+   * live IT should be skipped (Docker absent, flag set, or JAR not yet built).
+   */
+  @SuppressWarnings("resource")
+  private static GenericContainer<?> initSolrContainer() {
     if (shouldSkip()) {
-      SOLR = null;
-      BASE_URL = null;
-    } else {
-      autoDiscoverDockerHost();
-      hardFailIfNoDockerInCI();
-
-      Path projectBaseDir = resolveProjectBaseDir();
-      Path configset = projectBaseDir.resolve("src/test/resources/solr-integration/test-core");
-      Path targetDir = projectBaseDir.resolve("target");
-      Path initScript = projectBaseDir.resolve("docker/init-libs.sh");
-
-      if (!Files.isDirectory(configset)) {
-        throw new IllegalStateException("Missing configset directory: " + configset);
-      }
-      if (!Files.isDirectory(targetDir)) {
-        throw new IllegalStateException(
-            "Missing target/ directory: " + targetDir + " (run `mvn package` first).");
-      }
-      if (!Files.isRegularFile(initScript)) {
-        throw new IllegalStateException("Missing init-libs.sh: " + initScript);
-      }
-
-      Path projectJar = findProjectJar(targetDir);
-
-      // Stage only the project JAR in a temp directory.
-      //
-      // Docker's container archive API (used by withCopyFileToContainer) requires the
-      // destination parent directory to already exist inside the image.  /opt/umich-ext/
-      // is NOT present in solr:10, so any withCopyFileToContainer call targeting it
-      // silently fails (the Java Docker client swallows the error) and the init script
-      // then cannot find the JAR.
-      //
-      // withFileSystemBind (a host->container bind mount) does not go through the archive
-      // API: Docker creates the mount-point automatically.  This mirrors docker-compose's
-      //   ../target:/opt/umich-ext:ro
-      // volume entry exactly, but copies only the single project JAR rather than all of
-      // target/.
-      Path stagingDir;
-      try {
-        stagingDir = Files.createTempDirectory("umich-solr-lib-");
-        Files.copy(projectJar, stagingDir.resolve(projectJar.getFileName()));
-      } catch (IOException e) {
-        throw new IllegalStateException("Cannot create staging directory for project JAR", e);
-      }
-      Runtime.getRuntime().addShutdownHook(new Thread(() -> deleteQuietly(stagingDir)));
-
-      // EXT does not use ICU / analysis-extras; no SOLR_MODULES env var needed.
-      SOLR = new GenericContainer<>(SOLR_IMAGE)
-          .withExposedPorts(SOLR_PORT)
-          .withCopyFileToContainer(MountableFile.forHostPath(configset, 0755), "/opt/configs/" + CORE_NAME)
-          .withFileSystemBind(stagingDir.toString(), "/opt/umich-ext", BindMode.READ_ONLY)
-          .withCopyFileToContainer(
-              MountableFile.forHostPath(initScript, 0755),
-              "/docker-entrypoint-initdb.d/init-libs.sh")
-          .withCommand("solr-precreate", CORE_NAME, "/opt/configs/" + CORE_NAME)
-          .waitingFor(Wait.forHttp("/solr/admin/cores?action=STATUS&core=" + CORE_NAME)
-              .forPort(SOLR_PORT)
-              .forStatusCode(200)
-              .withStartupTimeout(Duration.ofMinutes(2)));
-
-      SOLR.start();
-      BASE_URL = "http://" + SOLR.getHost() + ":" + SOLR.getMappedPort(SOLR_PORT) + "/solr";
+      return null;
     }
+
+    autoDiscoverDockerHost();
+    hardFailIfNoDockerInCI();
+
+    Path projectBaseDir = resolveProjectBaseDir();
+    Path configset = projectBaseDir.resolve("src/test/resources/solr-integration/test-core");
+    Path targetDir = projectBaseDir.resolve("target");
+    Path initScript = projectBaseDir.resolve("docker/init-libs.sh");
+
+    if (!Files.isDirectory(configset)) {
+      throw new IllegalStateException("Missing configset directory: " + configset);
+    }
+    if (!Files.isDirectory(targetDir)) {
+      // target/ doesn't exist yet (Surefire runs before package phase in mvn verify).
+      // Skip gracefully; Failsafe will run this after mvn package.
+      return null;
+    }
+    if (!Files.isRegularFile(initScript)) {
+      throw new IllegalStateException("Missing init-libs.sh: " + initScript);
+    }
+
+    Optional<Path> jarOpt = findProjectJar(targetDir);
+    if (jarOpt.isEmpty()) {
+      // JAR not built yet. Skip gracefully; Failsafe will pick it up after package.
+      return null;
+    }
+    Path projectJar = jarOpt.get();
+
+    // Stage only the project JAR in a temp directory.
+    //
+    // Docker's container archive API (used by withCopyFileToContainer) requires the
+    // destination parent directory to already exist inside the image.  /opt/umich-ext/
+    // is NOT present in solr:10, so any withCopyFileToContainer call targeting it
+    // silently fails (the Java Docker client swallows the error) and the init script
+    // then cannot find the JAR.
+    //
+    // withFileSystemBind (a host->container bind mount) does not go through the archive
+    // API: Docker creates the mount-point automatically.  This mirrors docker-compose's
+    //   ../target:/opt/umich-ext:ro
+    // volume entry exactly, but copies only the single project JAR rather than all of
+    // target/.
+    Path stagingDir;
+    try {
+      stagingDir = Files.createTempDirectory("umich-solr-lib-");
+      Files.copy(projectJar, stagingDir.resolve(projectJar.getFileName()));
+    } catch (IOException e) {
+      throw new IllegalStateException("Cannot create staging directory for project JAR", e);
+    }
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> deleteQuietly(stagingDir)));
+
+    // EXT does not use ICU / analysis-extras; no SOLR_MODULES env var needed.
+    GenericContainer<?> solr = new GenericContainer<>(SOLR_IMAGE)
+        .withExposedPorts(SOLR_PORT)
+        .withCopyFileToContainer(MountableFile.forHostPath(configset, 0755), "/opt/configs/" + CORE_NAME)
+        .withFileSystemBind(stagingDir.toString(), "/opt/umich-ext", BindMode.READ_ONLY)
+        .withCopyFileToContainer(
+            MountableFile.forHostPath(initScript, 0755),
+            "/docker-entrypoint-initdb.d/init-libs.sh")
+        .withCommand("solr-precreate", CORE_NAME, "/opt/configs/" + CORE_NAME)
+        .waitingFor(Wait.forHttp("/solr/admin/cores?action=STATUS&core=" + CORE_NAME)
+            .forPort(SOLR_PORT)
+            .forStatusCode(200)
+            .withStartupTimeout(Duration.ofMinutes(2)));
+
+    solr.start();
+    return solr;
   }
 
   protected SolrClient client;
 
   @BeforeAll
   void createClient() {
-    Assumptions.assumeFalse(shouldSkip(),
-        "Live IT skipped via -DskipLiveIT=true or SKIP_LIVE_IT=true");
+    Assumptions.assumeTrue(SOLR != null,
+        "Live IT skipped: Docker unavailable, -DskipLiveIT=true, SKIP_LIVE_IT=true, "
+            + "or project JAR not yet built (run 'mvn package -DskipTests' first)");
     client = new HttpJdkSolrClient.Builder(BASE_URL + "/" + CORE_NAME)
         .withConnectionTimeout(10, TimeUnit.SECONDS)
         .withIdleTimeout(60, TimeUnit.SECONDS)
@@ -175,11 +194,12 @@ abstract class AbstractLiveIT {
    * <p>Matches {@code umich-solr-extensions-*.jar} while excluding classifier
    * variants ({@code -sources}, {@code -javadoc}, {@code -tests}).
    *
-   * @throws IllegalStateException if no matching JAR is found
+   * @return an {@link Optional} containing the JAR path, or empty if not found
+   * @throws IllegalStateException if {@code targetDir} cannot be listed
    */
-  private static Path findProjectJar(Path targetDir) {
+  private static Optional<Path> findProjectJar(Path targetDir) {
     try {
-      Optional<Path> jar = Files.list(targetDir)
+      return Files.list(targetDir)
           .filter(p -> {
             String name = p.getFileName().toString();
             return name.startsWith("umich-solr-extensions-")
@@ -189,12 +209,6 @@ abstract class AbstractLiveIT {
                 && !name.contains("-tests");
           })
           .findFirst();
-      if (jar.isEmpty()) {
-        throw new IllegalStateException(
-            "Project JAR not found in " + targetDir
-                + ". Run 'mvn package -DskipTests' first.");
-      }
-      return jar.get();
     } catch (IOException e) {
       throw new IllegalStateException("Cannot list " + targetDir, e);
     }
