@@ -27,10 +27,11 @@ import org.testcontainers.utility.MountableFile;
  * container shutdown automatically when the JVM exits.
  *
  * <p>Builds a thin Docker image from {@code solr:10} with the project JAR
- * baked in at {@code /var/solr/data/lib/}. This is the Solr shared-lib
- * directory (scanned for all cores) and is initialised from the image into
- * the anonymous Docker volume on first container start -- no bind mounts,
- * no init scripts, no Docker archive-API workarounds required.
+ * baked in at {@code /opt/solr/lib/} -- the Solr installation lib directory,
+ * documented by Solr 10 as the recommended location for plugins in a custom
+ * Dockerfile.  This path is NOT a Docker volume ({@code /var/solr} is the
+ * volume), so the JAR survives in the image and is loaded automatically for
+ * all cores without any {@code <lib>} directive in {@code solrconfig.xml}.
  *
  * <p>The test configset ({@code src/test/resources/solr-integration/test-core})
  * is copied into the container with {@code withCopyFileToContainer}.
@@ -97,22 +98,27 @@ abstract class AbstractLiveIT {
 
     // Build a thin image based on solr:10 with the project JAR baked in.
     //
-    // The JAR is placed at /var/solr/data/lib/ -- Solr's shared-lib directory,
-    // scanned for all cores.  Because /var/solr is a VOLUME in solr:10, Docker
-    // initialises the anonymous volume from the image content on first use, so
-    // files placed there in the Dockerfile are visible at container startup.
+    // The JAR is placed at /opt/solr/lib/ -- the Solr installation lib
+    // directory, documented by the Solr 10 reference guide as the recommended
+    // location for plugins when building a custom Solr Dockerfile.  This path
+    // is part of /opt/solr (the install dir, NOT a Docker volume), so writes
+    // in derived-image Dockerfiles are preserved.  /var/solr is the VOLUME;
+    // any writes there would be silently discarded.
+    //
+    // Solr scans /opt/solr/lib/ for all cores automatically -- no <lib>
+    // directive in solrconfig.xml is needed.
     //
     // This avoids:
     //   - bind mounts (unreliable in some CI environments)
     //   - the Docker archive API (silently fails when the target dir is missing)
-    //   - init scripts (run after the volume is mounted, need a staging area)
+    //   - init scripts (need staging area + run inside the VOLUME, also risky)
     ImageFromDockerfile image = new ImageFromDockerfile()
         .withDockerfileFromBuilder(builder ->
             builder.from(BASE_IMAGE)
                    .user("root")
-                   .run("mkdir -p /var/solr/data/lib")
-                   .copy(jarName, "/var/solr/data/lib/" + jarName)
-                   .run("chown -R solr:solr /var/solr/data/lib")
+                   .run("mkdir -p /opt/solr/lib")
+                   .copy(jarName, "/opt/solr/lib/" + jarName)
+                   .run("chown solr:solr /opt/solr/lib/" + jarName)
                    .user("solr")
                    .build())
         .withFileFromPath(jarName, projectJar);
