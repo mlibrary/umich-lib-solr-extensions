@@ -5,8 +5,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.HttpJdkSolrClient;
@@ -14,6 +16,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.DockerClientFactory;
+import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.MountableFile;
@@ -74,11 +77,33 @@ abstract class AbstractLiveIT {
 
       Path projectJar = findProjectJar(targetDir);
 
+      // Stage only the project JAR in a temp directory.
+      //
+      // Docker's container archive API (used by withCopyFileToContainer) requires the
+      // destination parent directory to already exist inside the image.  /opt/umich-ext/
+      // is NOT present in solr:10, so any withCopyFileToContainer call targeting it
+      // silently fails (the Java Docker client swallows the error) and the init script
+      // then cannot find the JAR.
+      //
+      // withFileSystemBind (a host->container bind mount) does not go through the archive
+      // API: Docker creates the mount-point automatically.  This mirrors docker-compose's
+      //   ../target:/opt/umich-ext:ro
+      // volume entry exactly, but copies only the single project JAR rather than all of
+      // target/.
+      Path stagingDir;
+      try {
+        stagingDir = Files.createTempDirectory("umich-solr-lib-");
+        Files.copy(projectJar, stagingDir.resolve(projectJar.getFileName()));
+      } catch (IOException e) {
+        throw new IllegalStateException("Cannot create staging directory for project JAR", e);
+      }
+      Runtime.getRuntime().addShutdownHook(new Thread(() -> deleteQuietly(stagingDir)));
+
       // EXT does not use ICU / analysis-extras; no SOLR_MODULES env var needed.
       SOLR = new GenericContainer<>(SOLR_IMAGE)
           .withExposedPorts(SOLR_PORT)
           .withCopyFileToContainer(MountableFile.forHostPath(configset, 0755), "/opt/configs/" + CORE_NAME)
-          .withCopyFileToContainer(MountableFile.forHostPath(projectJar, 0644), "/opt/umich-ext/" + projectJar.getFileName())
+          .withFileSystemBind(stagingDir.toString(), "/opt/umich-ext", BindMode.READ_ONLY)
           .withCopyFileToContainer(
               MountableFile.forHostPath(initScript, 0755),
               "/docker-entrypoint-initdb.d/init-libs.sh")
@@ -172,6 +197,22 @@ abstract class AbstractLiveIT {
       return jar.get();
     } catch (IOException e) {
       throw new IllegalStateException("Cannot list " + targetDir, e);
+    }
+  }
+
+  /**
+   * Recursively deletes {@code dir} and all its contents, ignoring any errors.
+   * Used to clean up the temporary staging directory on JVM exit.
+   */
+  private static void deleteQuietly(Path dir) {
+    try (Stream<Path> walk = Files.walk(dir)) {
+      walk.sorted(Comparator.reverseOrder()).forEach(p -> {
+        try {
+          Files.delete(p);
+        } catch (IOException ignored) {
+        }
+      });
+    } catch (IOException ignored) {
     }
   }
 
