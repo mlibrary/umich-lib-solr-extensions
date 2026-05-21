@@ -50,6 +50,127 @@
             <artifactId>solr-solrj</artifactId>
             <version>${solr.version}</version>
         </dependency>
+        <!--
+          Explicit workaround for broken solr-core:10.0.0 POM.
+          Maven emits "[WARNING] The POM for solr-core is invalid, transitive dependencies will not
+          be available" on a fresh cache (CI).  Every dependency that solr-core declares (including
+          its own Solr sub-modules, ZooKeeper, Curator, Jetty, etc.) must therefore be pinned here
+          so that CI resolves them directly.  Scope is 'test' for anything only tests need.
+        -->
+        <!-- Solr sub-modules (direct deps of solr-core, not pulled on CI due to broken POM) -->
+        <dependency>
+            <groupId>org.apache.solr</groupId>
+            <artifactId>solr-api</artifactId>
+            <version>${solr.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.solr</groupId>
+            <artifactId>solr-solrj-zookeeper</artifactId>
+            <version>${solr.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.solr</groupId>
+            <artifactId>solr-solrj-streaming</artifactId>
+            <version>${solr.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.solr</groupId>
+            <artifactId>solr-solrj-jetty</artifactId>
+            <version>${solr.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- ZooKeeper: EmbeddedSolrServer statically references KeeperException at class-load time -->
+        <dependency>
+            <groupId>org.apache.zookeeper</groupId>
+            <artifactId>zookeeper</artifactId>
+            <version>3.9.4</version>
+            <scope>test</scope>
+            <exclusions>
+                <!-- ZooKeeper bundles log4j 1.x; we use slf4j-simple -->
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.zookeeper</groupId>
+            <artifactId>zookeeper-jute</artifactId>
+            <version>3.9.4</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Curator: Solr uses it internally for ZooKeeper session management -->
+        <dependency>
+            <groupId>org.apache.curator</groupId>
+            <artifactId>curator-framework</artifactId>
+            <version>5.9.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.curator</groupId>
+            <artifactId>curator-client</artifactId>
+            <version>5.9.0</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- OpenTelemetry: compile-scope dep of solr-core, referenced in Solr internals -->
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-api</artifactId>
+            <version>1.56.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-context</artifactId>
+            <version>1.56.0</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- commons-io: compile-scope dep of solr-core, used throughout Solr internals -->
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.20.0</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- commons-lang3: runtime dep of solr-core used during core initialisation -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.20.0</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Jetty client stack: solr-core runtime, needed for HTTP-based Solr communication -->
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-client</artifactId>
+            <version>12.0.27</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-http</artifactId>
+            <version>12.0.27</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-io</artifactId>
+            <version>12.0.27</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-util</artifactId>
+            <version>12.0.27</version>
+            <scope>test</scope>
+        </dependency>
         <!-- Jackson: explicit deps to work around missing versions in solr-core:10.0.0 POM -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
