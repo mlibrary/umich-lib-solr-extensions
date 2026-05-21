@@ -1,9 +1,11 @@
 package edu.umich.lib.solr.integration.live;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.solr.client.solrj.SolrClient;
@@ -23,10 +25,10 @@ import org.testcontainers.utility.MountableFile;
  * Testcontainers-recommended "singleton container" pattern). Ryuk handles
  * container shutdown automatically when the JVM exits.
  *
- * <p>Mirrors the {@code docker/docker-compose.yml} layout: bind-mounts the
- * test configset, the {@code target/} directory (so the freshly-packaged
- * project JAR is visible), and the {@code docker/init-libs.sh} script that
- * stages the project JAR into {@code ${SOLR_HOME}/lib}.
+ * <p>Mirrors the {@code docker/docker-compose.yml} layout: copies the test
+ * configset and the freshly-packaged project JAR into the container
+ * (at {@code /opt/umich-ext/<jar>}), and the {@code docker/init-libs.sh}
+ * script that stages the JAR into {@code ${SOLR_HOME}/lib}.
  *
  * <p>Subclasses extend this class and gain access to {@link #client}, which
  * is created per-class in {@link #createClient()} and closed in
@@ -70,11 +72,13 @@ abstract class AbstractLiveIT {
         throw new IllegalStateException("Missing init-libs.sh: " + initScript);
       }
 
+      Path projectJar = findProjectJar(targetDir);
+
       // EXT does not use ICU / analysis-extras; no SOLR_MODULES env var needed.
       SOLR = new GenericContainer<>(SOLR_IMAGE)
           .withExposedPorts(SOLR_PORT)
           .withCopyFileToContainer(MountableFile.forHostPath(configset, 0755), "/opt/configs/" + CORE_NAME)
-          .withCopyFileToContainer(MountableFile.forHostPath(targetDir, 0755), "/opt/umich-ext")
+          .withCopyFileToContainer(MountableFile.forHostPath(projectJar, 0644), "/opt/umich-ext/" + projectJar.getFileName())
           .withCopyFileToContainer(
               MountableFile.forHostPath(initScript, 0755),
               "/docker-entrypoint-initdb.d/init-libs.sh")
@@ -138,6 +142,37 @@ abstract class AbstractLiveIT {
       return Paths.get(basedir);
     }
     return Paths.get("").toAbsolutePath();
+  }
+
+  /**
+   * Locates the single project JAR in {@code targetDir}.
+   *
+   * <p>Matches {@code umich-solr-extensions-*.jar} while excluding classifier
+   * variants ({@code -sources}, {@code -javadoc}, {@code -tests}).
+   *
+   * @throws IllegalStateException if no matching JAR is found
+   */
+  private static Path findProjectJar(Path targetDir) {
+    try {
+      Optional<Path> jar = Files.list(targetDir)
+          .filter(p -> {
+            String name = p.getFileName().toString();
+            return name.startsWith("umich-solr-extensions-")
+                && name.endsWith(".jar")
+                && !name.contains("-sources")
+                && !name.contains("-javadoc")
+                && !name.contains("-tests");
+          })
+          .findFirst();
+      if (jar.isEmpty()) {
+        throw new IllegalStateException(
+            "Project JAR not found in " + targetDir
+                + ". Run 'mvn package -DskipTests' first.");
+      }
+      return jar.get();
+    } catch (IOException e) {
+      throw new IllegalStateException("Cannot list " + targetDir, e);
+    }
   }
 
   /**
