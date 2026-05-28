@@ -1,4 +1,4 @@
-# umich-solr-extensions
+# umich-lib-solr-extensions
 
 Custom Apache Solr/Lucene components developed at the University of Michigan Library. The library provides token filters, field types, and supporting infrastructure for common library-catalog search and indexing patterns: call number normalization and sorting, anchored (left-anchored and fully-anchored) phrase search, and identifier (ISBN/LCCN) normalization.
 
@@ -43,7 +43,11 @@ Custom Apache Solr/Lucene components developed at the University of Michigan Lib
 
 ## Usage
 
-Build and install the JAR, then reference components in your Solr `schema.xml`. See [Inventory.md](Inventory.md) for detailed descriptions, schema snippets, and configuration options for each component.
+Build and install the JAR, then reference components in your Solr `schema.xml`. See [docs/components.md](docs/components.md) for detailed descriptions, schema snippets, and configuration options for each component.
+
+To build a new filter using the `SimpleFilter` / `SimpleFilterFactory` scaffolding, see [docs/simple-filter.md](docs/simple-filter.md).
+
+Example schema fragments are in [docs/examples/schema/](docs/examples/schema/).
 
 ## License
 

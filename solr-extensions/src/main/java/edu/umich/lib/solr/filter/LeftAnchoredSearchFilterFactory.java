@@ -1,0 +1,51 @@
+// Copyright (c) 2026, The Regents of the University of Michigan.
+// SPDX-License-Identifier: BSD-3-Clause
+package edu.umich.lib.solr.filter;
+
+import java.util.Map;
+import org.apache.lucene.analysis.TokenFilterFactory;
+import org.apache.lucene.analysis.TokenStream;
+
+/**
+ * Factory for {@link LeftAnchoredSearchFilter}.
+ *
+ * <p>When added to a field type's analysis chain (on both index and query), phrase queries against
+ * that field will only match if they are left-anchored — i.e. the first query token must align with
+ * the first indexed token.
+ *
+ * <p><strong>Note:</strong> this filter rewrites token text, so fields that include it are not
+ * suitable for generic keyword search.
+ *
+ * <h2>Schema example</h2>
+ *
+ * <pre>{@code
+ * <fieldType name="text_leftanchored" class="solr.TextField">
+ *   <analyzer>
+ *     <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+ *     <filter class="solr.ICUFoldingFilterFactory"/>
+ *     <filter class="leftAnchoredSearch"/>
+ *   </analyzer>
+ * </fieldType>
+ * }</pre>
+ */
+public class LeftAnchoredSearchFilterFactory extends TokenFilterFactory {
+
+  /** SPI name used in schema.xml and for ServiceLoader registration. */
+  public static final String NAME = "leftAnchoredSearch";
+
+  /** No-arg constructor required by {@link java.util.ServiceLoader}. */
+  public LeftAnchoredSearchFilterFactory() {
+    super(new java.util.LinkedHashMap<>());
+  }
+
+  /** Creates a factory pre-configured with {@code args}. */
+  public LeftAnchoredSearchFilterFactory(Map<String, String> args) {
+    super(args);
+  }
+
+  /** {@inheritDoc} Creates a {@link LeftAnchoredSearchFilter}. */
+  @Override
+  public LeftAnchoredSearchFilter create(TokenStream input) {
+    return new LeftAnchoredSearchFilter(input);
+  }
+}

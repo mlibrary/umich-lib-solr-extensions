@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE schema [
+<!ENTITY callnumber_fieldtypes SYSTEM "schema/callnumbers.xml">
+]>
+<schema name="minimal-config" version="1.6">
+
+    <!-- Pull in the callnumber type definitions -->
+    
+<!--  =============================================================
+           Callnumbers (LC and Dewey)
+
+ Our callnumber uses custom solr java code
+ (https://github.com/mlibrary/umich-lib-solr-extensions) that (very roughly) normalizes
+ LC and Dewey callnumbers for more useful searching and sorting.
+
+ We expose two custom field types and one analysis filter:
+
+   * `edu.umich.lib.solr.schema.CallNumberSortableFieldType`
+     will store the value as given, and index a value that is suitable
+     for exact matches (callnumber:"QA 11.2 .C3"), range queries
+     (callnumber:[* TO "QA 11.2 .C3"]), and sorting (if single-valued). It
+     takes an argument "echoInvalidInput" (default: false) to determine
+     whether or not to ignore (default) or pass through normalized values that don't
+     look like call numbers.
+   * `edu.umich.lib.solr.schema.CallNumberSortKeyFieldType`
+     is much like the above but the stored value is the same as the indexed value.
+   * `edu.umich.lib.solr.filter.AnyCallNumberNormalizerFilterFactory`
+     does the same transformation on a single token (so, use KeywordTokenizer)
+     as above, but in the analysis chain, so it can be combined with
+     `solr.EdgeNGramFilterFactory` to get prefix ("starts-with") searches for LC/Dewey.
+
+============================================================== -->
+
+
+<!-- For sorting and range queries. Stored is what you send it, indexed is the sortable key -->
+<fieldType name="any_callnumber" class="edu.umich.lib.solr.schema.CallNumberSortableFieldType" echoInvalidInput="true" docValues="false" multiValued="true" stored="true"/>
+
+<fieldType name="any_callnumber_strict" class="edu.umich.lib.solr.schema.CallNumberSortableFieldType" docValues="false" multiValued="true" stored="true"/>
+
+<!-- As above, but the index sort key is what's exposed as the stored version, too -->
+<fieldType name="any_callnumber_sort_key" class="edu.umich.lib.solr.schema.CallNumberSortKeyFieldType" echoInvalidInput="true" docValues="false" multiValued="true" stored="true"/>
+
+<fieldType name="any_callnumber_sort_key_strict" class="edu.umich.lib.solr.schema.CallNumberSortKeyFieldType" docValues="false" multiValued="true" stored="true"/>
+
+
+    <!-- for start_with/prefix searches -->
+<fieldType name="any_callnumber_starts_with" class="solr.TextField">
+<analyzer type="index">
+  <tokenizer class="solr.KeywordTokenizerFactory"/>
+  <filter class="solr.ICUFoldingFilterFactory"/>
+  <filter class="edu.umich.lib.solr.filter.AnyCallNumberNormalizerFilterFactory" echoInvalidInput="false"/>
+  <filter class="solr.EdgeNGramFilterFactory" maxGramSize="40" minGramSize="1"/>
+</analyzer>
+<analyzer type="query">
+  <tokenizer class="solr.KeywordTokenizerFactory"/>
+  <filter class="solr.ICUFoldingFilterFactory"/>
+  <filter class="edu.umich.lib.solr.filter.AnyCallNumberNormalizerFilterFactory" echoInvalidInput="true"/>
+</analyzer>
+</fieldType>
+
+    <!-- The very basics -->
+    <fieldType name="string" class="solr.StrField"/>
+    <fieldType name="long" class="solr.LongPointField"/>
+    <fieldType name="int" class="solr.IntPointField"/>
+    <fieldType class="solr.DatePointField" name="date"/>
+
+
+    <!-- bookkeeping -->
+    <field name="_version_" type="long" indexed="true" stored="true"/>
+    <field name="indexing_date" type="date" indexed="true" stored="true" default="NOW" multiValued="false"/>
+
+    <!-- Unique ID for a record is a combination of the callnumber and its bib.
+     -->
+    <field name="uid" type="string" indexed="true" stored="true" required="true"/>
+    <uniqueKey>uid</uniqueKey>
+
+    <!-- The ID is that same unique combination of callnumber and bib_id, but
+         processed by the callnumber filter for normalization. This provides a consistent
+         sort key that can be used to mark the beginning or end of a page.
+    -->
+    <field name="id" type="any_callnumber_strict" indexed="true" stored="true" multiValued="false"/>
+
+
+    <!-- Also keep bib_id and callnumber in their own fields -->
+    <field name="callnumber" type="any_callnumber_strict" stored="true" indexed="true" multiValued="false"/>
+
+    <!-- The bib_id is actually a number, but store it as a string to avoid problems with leading zeros and such -->
+    <field name="bib_id" type="string" stored="true" indexed="true" multiValued="false"/>
+
+</schema>

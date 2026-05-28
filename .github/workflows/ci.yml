@@ -6,28 +6,92 @@ on:
   pull_request:
 
 jobs:
-  test:
+  # -------------------------------------------------------------------------
+  # Unit / integration tests (no Docker required)
+  # Runs on every JDK in the matrix; live ITs are disabled by default.
+  # -------------------------------------------------------------------------
+  build:
+    name: Build & Unit Tests (Java ${{ matrix.java }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: ['21']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java ${{ matrix.java }} (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: temurin
+          cache: maven
+
+      - name: Build and run unit tests
+        run: mvn verify
+
+      - name: Check for unused / undeclared dependencies
+        run: mvn dependency:analyze -DfailOnWarning
+
+      - name: Upload test reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports-java-${{ matrix.java }}
+          path: |
+            **/target/surefire-reports/
+            **/target/failsafe-reports/
+
+  # -------------------------------------------------------------------------
+  # Live integration tests (Testcontainers + Docker)
+  # Ubuntu GitHub Actions runners ship with Docker; no extra daemon setup needed.
+  # -------------------------------------------------------------------------
+  live-it:
+    name: Live Integration Tests (Java 21)
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Java 21
+      - name: Set up Java 21 (Temurin)
         uses: actions/setup-java@v4
         with:
           java-version: '21'
-          distribution: 'temurin'
+          distribution: temurin
           cache: maven
 
-      - name: Build and run all tests
-        run: mvn verify
+      # Cache the solr:10 image layer so repeated runs avoid a fresh registry pull.
+      # actions/cache saves the directory in a post-run hook after the job exits;
+      # the "Export Docker image" step below writes the tarball before that hook fires.
+      - name: Cache solr:10 Docker image
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.docker-image-cache
+          key: docker-solr-10-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            docker-solr-10-
 
-      - name: Upload test reports on failure
+      - name: Load cached Docker image (if present)
+        run: |
+          if [ -f /tmp/.docker-image-cache/solr-10.tar ]; then
+            docker load < /tmp/.docker-image-cache/solr-10.tar
+          fi
+
+      - name: Run live integration tests
+        run: mvn -P live-it verify
+
+      # Export the image to disk so the cache action saves it on post-run.
+      - name: Export solr:10 image for cache
+        if: always()
+        run: |
+          mkdir -p /tmp/.docker-image-cache
+          docker save solr:10 > /tmp/.docker-image-cache/solr-10.tar 2>/dev/null || true
+
+      - name: Upload failsafe reports on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: test-reports
-          path: |
-            target/surefire-reports/
-            target/failsafe-reports/
+          name: failsafe-reports
+          path: '**/target/failsafe-reports/'

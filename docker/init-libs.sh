@@ -1,6 +1,6 @@
 #!/bin/sh
 # Runs once before solr-foreground via /docker-entrypoint-initdb.d.
-# Copies the freshly-built umich-solr-extensions JAR from the read-only
+# Copies the freshly-built umich-lib-solr-extensions JAR from the read-only
 # bind mount at /opt/umich-ext into ${SOLR_HOME}/lib so Solr 10 picks it
 # up at the node classloader level.
 #
@@ -17,10 +17,10 @@ DEST_DIR="${SOLR_HOME}/lib"
 mkdir -p "$DEST_DIR"
 
 # Remove stale copies
-rm -f "$DEST_DIR"/umich-solr-extensions-*.jar
+rm -f "$DEST_DIR"/umich-lib-solr-extensions-*.jar
 
-for jar in "$SRC_DIR"/umich-solr-extensions-*.jar; do
-  [ -e "$jar" ] || { echo "init-libs: no umich-solr-extensions JAR found in $SRC_DIR; run 'mvn package -DskipTests' on the host first" >&2; exit 1; }
+for jar in "$SRC_DIR"/umich-lib-solr-extensions-*.jar; do
+  [ -e "$jar" ] || { echo "init-libs: no umich-lib-solr-extensions JAR found in $SRC_DIR; run 'mvn package -DskipTests' on the host first" >&2; exit 1; }
   cp "$jar" "$DEST_DIR/"
   echo "init-libs: copied $(basename "$jar") -> $DEST_DIR"
 done

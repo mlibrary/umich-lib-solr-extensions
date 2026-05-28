@@ -1,7 +1,7 @@
 # Docker Compose for local Solr 10 integration testing.
 #
 # Brings up a single-node Solr 10 in standalone mode with:
-# - the freshly-built umich-solr-extensions JAR copied into ${SOLR_HOME}/lib
+# - the freshly-built umich-lib-solr-extensions JAR copied into ${SOLR_HOME}/lib
 # - a "test-core" auto-created from src/test/resources/solr-integration/test-core/conf
 #
 # Quick start:
@@ -23,7 +23,7 @@
 services:
   solr:
     image: solr:10
-    container_name: umich-solr-ext
+    container_name: umich-lib-solr-ext
     ports:
       - "8983:8983"
     # No SOLR_MODULES needed: EXT does not use ICU / analysis-extras
@@ -39,7 +39,7 @@ services:
       - ../src/test/resources/solr-integration/test-core:/opt/configs/test-core:ro
 
       # 2. Maven build output, read-only. The init script (#3) copies the
-      #    umich-solr-extensions JAR from here into ${SOLR_HOME}/lib so it
+      #    umich-lib-solr-extensions JAR from here into ${SOLR_HOME}/lib so it
       #    lands on Solr's node-level classloader.
       - ../target:/opt/umich-ext:ro
 
