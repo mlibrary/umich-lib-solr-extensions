@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 package edu.umich.lib.solr.schema;
 
-import edu.umich.lib.normalize.callnumber.AnyCallNumberSimple;
+import edu.umich.lib.normalize.callnumber.AnyCallNumber;
 import java.lang.invoke.MethodHandles;
 import java.util.Map;
 import org.apache.solr.schema.IndexSchema;
@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * A Solr {@link StrField} subtype that converts a raw call number into a sortable collation key
- * using {@link AnyCallNumberSimple}.
+ * using {@link AnyCallNumber}.
  *
  * <p>The stored value combines the normalized call-number key, an end-of-call-number sentinel
  * ({@code \u001F}), the field delimiter ({@code }}), and any additional fields bundled in the
@@ -78,7 +78,7 @@ public class CallNumberSortKeyFieldType extends StrField {
       appendedFields = fields[1];
     }
 
-    AnyCallNumberSimple cn = new AnyCallNumberSimple(fields[0]);
+    AnyCallNumber cn = new AnyCallNumber(fields[0]);
 
     // Valid? Return it
     if (cn.hasValidKey()) {

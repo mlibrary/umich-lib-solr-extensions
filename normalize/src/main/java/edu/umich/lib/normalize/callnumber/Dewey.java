@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
  * punctuation (which will take care of a dot before a cutter) * trim spaces again * compact spaces
  * * add back in with a preceding space
  */
-public class DeweySimple extends AbstractCallNumber {
+public class Dewey extends AbstractCallNumber {
 
   private static final Logger LOGGER =
       LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -33,7 +33,7 @@ public class DeweySimple extends AbstractCallNumber {
 
   public static Pattern ACCEPTABLE_THREE_DIGITS_PATTERN = Pattern.compile("^\\s*\\d{3}\\s*$");
 
-  public DeweySimple(String str) {
+  public Dewey(String str) {
     trimmedOriginal = trimPunctuation(str.trim().toLowerCase());
     Matcher m = DEWEY_PATTERN.matcher(trimmedOriginal);
     if (m.matches()) {

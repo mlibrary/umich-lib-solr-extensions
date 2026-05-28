@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
  * <p>The collation key encodes the digit portion with a length prefix so that, for example, {@code
  * QA9} sorts before {@code QA10}.
  */
-public class LCCallNumberSimple extends AbstractCallNumber {
+public class LCCallNumber extends AbstractCallNumber {
 
   public String letters = "";
   public String digits = "";
@@ -55,7 +55,7 @@ public class LCCallNumberSimple extends AbstractCallNumber {
 
   public static Pattern ACCEPTABLE_ONLY_LETTERS = Pattern.compile(LETTER_PAT + "\\s*$");
 
-  public LCCallNumberSimple(String str) {
+  public LCCallNumber(String str) {
     original = str;
     trimmedOriginal = trimPunctuation(str.trim()).trim().toLowerCase();
     Matcher m = LC_START.matcher(trimmedOriginal);

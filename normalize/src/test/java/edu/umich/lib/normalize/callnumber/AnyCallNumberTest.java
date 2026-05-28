@@ -8,14 +8,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 
-class AnyCallNumberSimpleTest {
+class AnyCallNumberTest {
 
   @ParameterizedTest
   @CsvFileSource(
       resources = "/edu/umich/lib/normalize/callnumber/any_valid_key_verification.tsv",
       delimiterString = "->")
   void any_valid_key(String original, String collated) {
-    AnyCallNumberSimple acn = new AnyCallNumberSimple(original);
+    AnyCallNumber acn = new AnyCallNumber(original);
     String computed = acn.anyAcceptableKey();
     if (computed == null) computed = "null";
     assertEquals(collated.toString(), computed);
@@ -24,7 +24,7 @@ class AnyCallNumberSimpleTest {
   @Test
   void valid_truncated_key() {
     // Letters-only LC stub — valid truncated via LC sub-object
-    AnyCallNumberSimple lcTruncated = new AnyCallNumberSimple("AB");
+    AnyCallNumber lcTruncated = new AnyCallNumber("AB");
     assertFalse(lcTruncated.hasValidKey(), "pure letters should not be a full valid key");
     assertTrue(
         lcTruncated.hasAcceptableTruncatedKey(),
@@ -32,7 +32,7 @@ class AnyCallNumberSimpleTest {
     assertEquals("ab", lcTruncated.acceptableTruncatedKey());
 
     // Fully invalid input — no truncated key available
-    AnyCallNumberSimple neither = new AnyCallNumberSimple("8AB");
+    AnyCallNumber neither = new AnyCallNumber("8AB");
     assertFalse(neither.hasValidKey());
     assertFalse(neither.hasAcceptableTruncatedKey());
     assertNull(neither.acceptableTruncatedKey());
@@ -42,13 +42,13 @@ class AnyCallNumberSimpleTest {
   void invalid_key() {
     // invalidKey() delegates to LCCallNumberSimple.invalidKey(), which lowercases
     // and inserts a space between a digit and a following letter
-    AnyCallNumberSimple acn = new AnyCallNumberSimple("8AB");
+    AnyCallNumber acn = new AnyCallNumber("8AB");
     assertFalse(acn.hasValidKey());
     assertNotNull(acn.invalidKey());
     assertEquals("8 ab", acn.invalidKey());
 
     // A fully garbage string still produces a non-null invalid key
-    AnyCallNumberSimple garbage = new AnyCallNumberSimple("???");
+    AnyCallNumber garbage = new AnyCallNumber("???");
     assertNotNull(garbage.invalidKey());
   }
 }

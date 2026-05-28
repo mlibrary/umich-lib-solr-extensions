@@ -2,21 +2,21 @@
 // SPDX-License-Identifier: BSD-3-Clause
 package edu.umich.lib.normalize.callnumber;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 
-class LCCallNumberSimpleTest {
+class DeweyTest {
 
   @ParameterizedTest
   @CsvFileSource(
-      resources = "/edu/umich/lib/normalize/callnumber/lc__verification.tsv",
+      resources = "/edu/umich/lib/normalize/callnumber/dewey_verification.tsv",
       delimiterString = "->")
   void collation_key(String original, String collation) {
-    LCCallNumberSimple lccs = new LCCallNumberSimple(original);
-    String key = lccs.collationKey();
+    Dewey dewey = new Dewey(original);
+    String key = dewey.collationKey();
     if (key == null) key = "null";
-    assertEquals(collation.trim(), key);
+    assertEquals(collation.toString(), key);
   }
 }

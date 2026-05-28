@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 package edu.umich.lib.solr.filter;
 
-import edu.umich.lib.normalize.callnumber.AnyCallNumberSimple;
+import edu.umich.lib.normalize.callnumber.AnyCallNumber;
 import java.lang.invoke.MethodHandles;
 import java.util.Map;
 import org.apache.lucene.analysis.TokenStream;
@@ -68,7 +68,7 @@ public final class AnyCallNumberNormalizerFilter extends SimpleFilter {
   @Override
   public String munge(String input) {
     try {
-      AnyCallNumberSimple cn = new AnyCallNumberSimple(input);
+      AnyCallNumber cn = new AnyCallNumber(input);
       String key = cn.bestKey(allowTruncated, false);
       if (key == null) {
         LOGGER.warn("No best key for '{}'", input);

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 package edu.umich.lib.solr.filter;
 
-import edu.umich.lib.normalize.callnumber.DeweySimple;
+import edu.umich.lib.normalize.callnumber.Dewey;
 import java.lang.invoke.MethodHandles;
 import java.util.Map;
 import org.apache.lucene.analysis.TokenStream;
@@ -68,7 +68,7 @@ public final class DeweyCallNumberNormalizerFilter extends SimpleFilter {
   @Override
   public String munge(String input) {
     try {
-      DeweySimple dewey = new DeweySimple(input);
+      Dewey dewey = new Dewey(input);
       return dewey.bestKey(allowTruncated, false);
     } catch (IllegalArgumentException e) {
       LOGGER.info(e.getMessage(), e);

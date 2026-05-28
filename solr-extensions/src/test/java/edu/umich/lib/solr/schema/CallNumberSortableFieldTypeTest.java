@@ -4,7 +4,7 @@ package edu.umich.lib.solr.schema;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import edu.umich.lib.normalize.callnumber.AnyCallNumberSimple;
+import edu.umich.lib.normalize.callnumber.AnyCallNumber;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
  *   <li>Inheritance: {@code toInternal()} works identically to the parent.
  *   <li>Gate logic: the {@code hasSomeKeyAtAll} predicate (package-visible via subclass reflection)
  *       drives whether {@code createField} returns {@code null}; we verify the underlying {@link
- *       AnyCallNumberSimple} state that drives those decisions.
+ *       AnyCallNumber} state that drives those decisions.
  *   <li>Configuration: {@code allowTruncated} and {@code echoInvalidInput} behave as documented.
  * </ul>
  */
@@ -89,31 +89,31 @@ class CallNumberSortableFieldTypeTest {
   }
 
   // -----------------------------------------------------------------------
-  // hasSomeKeyAtAll gate — tested via AnyCallNumberSimple state
+  // hasSomeKeyAtAll gate — tested via AnyCallNumber state
   //
   // createField() skips (returns null) when hasSomeKeyAtAll() is false.
   // That condition holds when:
   //   !hasValidKey && !echoInvalidInput && !(allowTruncated && hasAcceptableTruncatedKey)
   //
-  // We verify the underlying AnyCallNumberSimple state so we can be confident about
+  // We verify the underlying AnyCallNumber state so we can be confident about
   // which inputs will be dropped by createField() in the live IT.
   // -----------------------------------------------------------------------
 
   @Nested
-  @DisplayName("hasSomeKeyAtAll gate — AnyCallNumberSimple state")
+  @DisplayName("hasSomeKeyAtAll gate — AnyCallNumber state")
   class GateLogic {
 
     @Test
     @DisplayName("valid LC input: hasValidKey=true → field will be created")
     void validLCHasKey() {
-      AnyCallNumberSimple cn = new AnyCallNumberSimple("PS3537.A832 B6 1948");
+      AnyCallNumber cn = new AnyCallNumber("PS3537.A832 B6 1948");
       assertTrue(cn.hasValidKey(), "valid LC should have a key");
     }
 
     @Test
     @DisplayName("valid Dewey input: hasValidKey=true → field will be created")
     void validDeweyHasKey() {
-      AnyCallNumberSimple cn = new AnyCallNumberSimple("813.54 SAL");
+      AnyCallNumber cn = new AnyCallNumber("813.54 SAL");
       assertTrue(cn.hasValidKey(), "valid Dewey should have a key");
     }
 
@@ -121,7 +121,7 @@ class CallNumberSortableFieldTypeTest {
     @DisplayName(
         "truncated LC (letters only): hasAcceptableTruncatedKey=true → field will be created when allowTruncated=true")
     void truncatedLCHasTruncatedKey() {
-      AnyCallNumberSimple cn = new AnyCallNumberSimple("PS");
+      AnyCallNumber cn = new AnyCallNumber("PS");
       assertFalse(cn.hasValidKey(), "letters-only should not be a full valid key");
       assertTrue(
           cn.hasAcceptableTruncatedKey(),
@@ -132,7 +132,7 @@ class CallNumberSortableFieldTypeTest {
     @DisplayName(
         "fully invalid input: no valid or truncated key → field will be skipped (echoInvalidInput=false)")
     void invalidInputSkipped() {
-      AnyCallNumberSimple cn = new AnyCallNumberSimple("!@#$%");
+      AnyCallNumber cn = new AnyCallNumber("!@#$%");
       assertFalse(cn.hasValidKey());
       assertFalse(cn.hasAcceptableTruncatedKey());
       // toInternal returns null for this input with default config

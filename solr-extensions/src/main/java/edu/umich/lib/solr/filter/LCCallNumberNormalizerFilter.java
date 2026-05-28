@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 package edu.umich.lib.solr.filter;
 
-import edu.umich.lib.normalize.callnumber.LCCallNumberSimple;
+import edu.umich.lib.normalize.callnumber.LCCallNumber;
 import java.lang.invoke.MethodHandles;
 import java.util.Map;
 import org.apache.lucene.analysis.TokenStream;
@@ -68,7 +68,7 @@ public final class LCCallNumberNormalizerFilter extends SimpleFilter {
   @Override
   public String munge(String input) {
     try {
-      LCCallNumberSimple lc = new LCCallNumberSimple(input);
+      LCCallNumber lc = new LCCallNumber(input);
       return lc.bestKey(allowTruncated, false);
     } catch (IllegalArgumentException e) {
       LOGGER.info(e.getMessage(), e);

@@ -11,14 +11,14 @@ import org.slf4j.LoggerFactory;
  * neither format produces a valid parse, the input is treated as an unrecognised string and
  * returned via {@link #invalidKey()}.
  */
-public class AnyCallNumberSimple extends AbstractCallNumber {
+public class AnyCallNumber extends AbstractCallNumber {
 
   private static final Logger LOGGER =
       LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
   public String eitherValidKey;
-  public LCCallNumberSimple lc;
-  public DeweySimple dewey;
+  public LCCallNumber lc;
+  public Dewey dewey;
 
   /**
    * Parses {@code str} as both an LC and a Dewey call number and selects whichever format produces
@@ -26,10 +26,10 @@ public class AnyCallNumberSimple extends AbstractCallNumber {
    *
    * @param str the raw call-number string to parse
    */
-  public AnyCallNumberSimple(String str) {
+  public AnyCallNumber(String str) {
     trimmedOriginal = str;
-    lc = new LCCallNumberSimple(str);
-    dewey = new DeweySimple(str);
+    lc = new LCCallNumber(str);
+    dewey = new Dewey(str);
     eitherValidKey = chooseLCOrDeweyValidKey(trimmedOriginal);
     isValid = !(eitherValidKey == null);
   }
