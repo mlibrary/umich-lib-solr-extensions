@@ -60,6 +60,13 @@ pair that matches the Solr instance you're deploying to. Note that Lucene's majo
 The live integration tests (`*LiveIT.java`, run via `mvn verify`, skipped by `-DskipTests`) boot a Solr container via Testcontainers with the built JAR baked in. 
 The container image tag tracks `solr.version` automatically (major version only, e.g. `solr:9` or `solr:10`), so `mvn verify -Dsolr.version=9.7.0 ...` tests against a matching Solr 9 container.
 
+# Derived automatically from solr.version (major version only)                                                                                                                                                                                                                                                                     
+mvn verify -Dsolr.version=9.7.0 -Dlucene.version=9.11.1 -Djava.version=17   # → solr:9                                                                                                                                                                                                                                             
+                                                                                                                                                                                                                                                                                                                                     
+# Or force an exact tag/image                                                                                                                                                                                                                                                                                                      
+mvn verify -Dsolr.docker.image=solr:9.10.1                                                                                                                                                                                                                                                                                         
+mvn verify -Dsolr.docker.image=myregistry/solr:9.7.0-custom  
+
 ## Usage
 
 Build and install the JAR, then reference components in your Solr `schema.xml`. See [Inventory.md](Inventory.md) for detailed descriptions, schema snippets, and configuration options for each component.
