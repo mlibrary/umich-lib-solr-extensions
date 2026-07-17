@@ -12,7 +12,8 @@
     <description>UMich Solr extensions: anchored search filters, analyzed string field type, ISBN/LCCN normalizers</description>
 
     <properties>
-        <maven.compiler.release>21</maven.compiler.release>
+        <java.version>21</java.version>
+        <maven.compiler.release>${java.version}</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <solr.version>10.0.0</solr.version>
         <lucene.version>10.3.2</lucene.version>
@@ -84,7 +85,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
                 <configuration>
-                    <release>21</release>
+                    <release>${java.version}</release>
                 </configuration>
             </plugin>
             <plugin>
@@ -107,6 +108,7 @@
                     <systemPropertyVariables>
                         <project.build.directory>${project.build.directory}</project.build.directory>
                         <project.basedir>${project.basedir}</project.basedir>
+                        <solr.version>${solr.version}</solr.version>
                     </systemPropertyVariables>
                 </configuration>
                 <executions>

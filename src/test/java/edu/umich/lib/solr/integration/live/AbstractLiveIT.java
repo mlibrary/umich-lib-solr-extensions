@@ -22,13 +22,16 @@ import org.testcontainers.utility.MountableFile;
 /**
  * Singleton-base-class for all live Solr integration tests.
  *
- * <p>Starts ONE Solr 10 container per JVM via a static initializer (the
+ * <p>Starts ONE Solr container per JVM via a static initializer (the
  * Testcontainers-recommended "singleton container" pattern). Ryuk handles
- * container shutdown automatically when the JVM exits.
+ * container shutdown automatically when the JVM exits. The base image tag
+ * is derived from the {@code solr.version} system property (major version
+ * only, e.g. {@code solr:9} or {@code solr:10} -- see {@link #resolveBaseImage()}),
+ * so it tracks whichever solrj client the project JAR was built against.
  *
- * <p>Builds a thin Docker image from {@code solr:10} with the project JAR
+ * <p>Builds a thin Docker image from that base with the project JAR
  * baked in at {@code /opt/solr/lib/} -- the Solr installation lib directory,
- * documented by Solr 10 as the recommended location for plugins in a custom
+ * documented as the recommended location for plugins in a custom
  * Dockerfile.  This path is NOT a Docker volume ({@code /var/solr} is the
  * volume), so the JAR survives in the image and is loaded automatically for
  * all cores without any {@code <lib>} directive in {@code solrconfig.xml}.
@@ -47,7 +50,7 @@ import org.testcontainers.utility.MountableFile;
  */
 abstract class AbstractLiveIT {
 
-  private static final String BASE_IMAGE = "solr:10";
+  private static final String BASE_IMAGE = resolveBaseImage();
   private static final String CORE_NAME  = "test-core";
   private static final int    SOLR_PORT  = 8983;
 
@@ -96,10 +99,10 @@ abstract class AbstractLiveIT {
     Path projectJar = jarOpt.get();
     String jarName  = projectJar.getFileName().toString();
 
-    // Build a thin image based on solr:10 with the project JAR baked in.
+    // Build a thin image based on BASE_IMAGE with the project JAR baked in.
     //
     // The JAR is placed at /opt/solr/lib/ -- the Solr installation lib
-    // directory, documented by the Solr 10 reference guide as the recommended
+    // directory, documented by the Solr reference guide as the recommended
     // location for plugins when building a custom Solr Dockerfile.  This path
     // is part of /opt/solr (the install dir, NOT a Docker volume), so writes
     // in derived-image Dockerfiles are preserved.  /var/solr is the VOLUME;
@@ -188,6 +191,23 @@ abstract class AbstractLiveIT {
         + "    ~/.docker/run/docker.sock, export DOCKER_HOST=unix://$HOME/.docker/run/docker.sock\n"
         + "  - To skip locally, run with -DskipLiveIT=true or SKIP_LIVE_IT=true.";
     throw new IllegalStateException(msg);
+  }
+
+  /**
+   * Resolves the base Docker image tag. Defaults to the major version parsed
+   * from the {@code solr.version} system property (set from the Maven
+   * {@code solr.version} property via failsafe, matching whatever solrj
+   * version the project JAR was compiled against), e.g. {@code 9.7.0} ->
+   * {@code solr:9}. Override with the exact tag via {@code -Dsolr.docker.image}.
+   */
+  private static String resolveBaseImage() {
+    String explicit = System.getProperty("solr.docker.image");
+    if (explicit != null && !explicit.isBlank()) {
+      return explicit;
+    }
+    String solrVersion = System.getProperty("solr.version", "10");
+    String major = solrVersion.split("\\.")[0];
+    return "solr:" + major;
   }
 
   private static Path resolveProjectBaseDir() {
