@@ -1,10 +1,13 @@
 package edu.umich.lib.solr.integration.live;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.Duration;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -37,7 +40,11 @@ import org.testcontainers.utility.MountableFile;
  * all cores without any {@code <lib>} directive in {@code solrconfig.xml}.
  *
  * <p>The test configset ({@code src/test/resources/solr-integration/test-core})
- * is copied into the container with {@code withCopyFileToContainer}.
+ * is copied into the container with {@code withCopyFileToContainer}. Before
+ * copying, {@link #prepareConfigset(Path, Path)} rewrites its
+ * {@code conf/solrconfig.xml} {@code <luceneMatchVersion>} to match the same
+ * major version as {@link #BASE_IMAGE}, so it never claims compatibility with
+ * a newer Lucene than the container actually runs.
  *
  * <p>Subclasses extend this class and gain access to {@link #client}, which
  * is created per-class in {@link #createClient()} and closed in
@@ -99,6 +106,13 @@ abstract class AbstractLiveIT {
     Path projectJar = jarOpt.get();
     String jarName  = projectJar.getFileName().toString();
 
+    Path preparedConfigset;
+    try {
+      preparedConfigset = prepareConfigset(configset, targetDir);
+    } catch (IOException e) {
+      throw new IllegalStateException("Failed to prepare configset with matched luceneMatchVersion", e);
+    }
+
     // Build a thin image based on BASE_IMAGE with the project JAR baked in.
     //
     // The JAR is placed at /opt/solr/lib/ -- the Solr installation lib
@@ -129,7 +143,7 @@ abstract class AbstractLiveIT {
     GenericContainer<?> solr = new GenericContainer<>(image)
         .withExposedPorts(SOLR_PORT)
         .withCopyFileToContainer(
-            MountableFile.forHostPath(configset, 0755),
+            MountableFile.forHostPath(preparedConfigset, 0755),
             "/opt/configs/" + CORE_NAME)
         .withCommand("solr-precreate", CORE_NAME, "/opt/configs/" + CORE_NAME)
         .waitingFor(Wait.forHttp("/solr/admin/cores?action=STATUS&core=" + CORE_NAME)
@@ -205,9 +219,66 @@ abstract class AbstractLiveIT {
     if (explicit != null && !explicit.isBlank()) {
       return explicit;
     }
+    return "solr:" + solrMajorVersion();
+  }
+
+  /** Major version parsed from the {@code solr.version} system property, e.g. {@code 9.7.0} -> {@code "9"}. */
+  private static String solrMajorVersion() {
     String solrVersion = System.getProperty("solr.version", "10");
-    String major = solrVersion.split("\\.")[0];
-    return "solr:" + major;
+    return solrVersion.split("\\.")[0];
+  }
+
+  /**
+   * Copies {@code configset} into a scratch directory under {@code targetDir} and
+   * rewrites its {@code conf/solrconfig.xml} {@code <luceneMatchVersion>} to
+   * {@code <solrMajorVersion>.0.0}, e.g. {@code 9.0.0} when testing against a
+   * {@code solr:9} container. {@code X.0.0} is always a valid match version for
+   * any release within that major line, so this stays correct without needing
+   * to know the exact Lucene patch version a given Solr release embeds.
+   *
+   * <p>The original {@code src/test/resources} configset is left untouched;
+   * only the copy handed to Testcontainers is patched.
+   */
+  private static Path prepareConfigset(Path configset, Path targetDir) throws IOException {
+    Path prepared = targetDir.resolve("live-it-configset");
+    if (Files.exists(prepared)) {
+      deleteRecursively(prepared);
+    }
+    copyRecursively(configset, prepared);
+
+    Path solrConfig = prepared.resolve("conf/solrconfig.xml");
+    String patched = Files.readString(solrConfig)
+        .replaceFirst(
+            "<luceneMatchVersion>[^<]*</luceneMatchVersion>",
+            "<luceneMatchVersion>" + solrMajorVersion() + ".0.0</luceneMatchVersion>");
+    Files.writeString(solrConfig, patched);
+
+    return prepared;
+  }
+
+  private static void copyRecursively(Path source, Path target) throws IOException {
+    try (var paths = Files.walk(source)) {
+      for (Path src : (Iterable<Path>) paths::iterator) {
+        Path dest = target.resolve(source.relativize(src));
+        if (Files.isDirectory(src)) {
+          Files.createDirectories(dest);
+        } else {
+          Files.copy(src, dest, StandardCopyOption.REPLACE_EXISTING);
+        }
+      }
+    }
+  }
+
+  private static void deleteRecursively(Path path) throws IOException {
+    try (var paths = Files.walk(path)) {
+      paths.sorted(Comparator.reverseOrder()).forEach(p -> {
+        try {
+          Files.delete(p);
+        } catch (IOException e) {
+          throw new UncheckedIOException(e);
+        }
+      });
+    }
   }
 
   private static Path resolveProjectBaseDir() {
