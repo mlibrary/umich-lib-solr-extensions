@@ -15,11 +15,13 @@ jobs:
 
       - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
         with:
+          # Solr 9 requires Java 17; CI uses Java 21 (Solr 10 default)
           java-version: '17'
           distribution: 'temurin'
           cache: 'maven'
 
       - name: Build
+        # Targeting Solr 9 — the only HathiTrust index using Solr 10 (ptsearch) does not use custom JARs
         run: mvn clean package -Dsolr.version=9.7.0 -Dlucene.version=9.11.1 -Djava.version=17 -DskipTests
 
       - name: Publish release
