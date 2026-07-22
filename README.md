@@ -4,8 +4,8 @@ Custom Apache Solr/Lucene components developed at the University of Michigan Lib
 
 ## Requirements
 
-- Java 21+
-- Apache Solr / Lucene 10.x
+- Java 17+ (21+ if building against Solr/Lucene 10.x)
+- Apache Solr / Lucene 9.x or 10.x
 
 ## Components
 
@@ -40,6 +40,32 @@ Custom Apache Solr/Lucene components developed at the University of Michigan Lib
 | `SimpleFilter` | Abstract base class for single-token-in / single-token-out transforms. Subclasses implement `munge(String input)`: return the transformed string, or `null` to drop the token (subject to `echoInvalidInput`). |
 | `SimpleFilterFactory` | Companion factory base for `SimpleFilter` subclasses. Reads `echoInvalidInput` from schema args and forwards remaining args to the filter constructor. |
 | `AnalyzedString` | Solr field type that indexes a value through a named analyzer chain but stores the original. Useful for browse fields where display value and sort/search key differ. |
+
+## Building
+
+The JAR is compiled against a specific Solr/Lucene major version at build time. `solr.version`, `lucene.version`, and `java.version` are Maven properties with defaults for Solr 10 (`solr.version=10.0.0`, `lucene.version=10.3.2`, `java.version=21`); override them on the command line to target a different version:
+Maven lets us override any property via -D on the command line regardless of its declared default.
+
+```sh
+# Solr 10.x (default) / Java 21
+mvn clean package -DskipTests
+
+# Solr 9.x / Java 17
+mvn clean package -Dsolr.version=9.7.0 -Dlucene.version=9.11.1 -Djava.version=17 -DskipTests
+```
+
+Each build produces a single JAR (`target/umich-solr-extensions-*.jar`) compiled/targeted for the requested version — pick the Solr/Lucene version 
+pair that matches the Solr instance you're deploying to. Note that Lucene's major version must match Solr's (Solr 9.x embeds Lucene 9.x, Solr 10.x embeds Lucene 10.x).
+
+The live integration tests (`*LiveIT.java`, run via `mvn verify`, skipped by `-DskipTests`) boot a Solr container via Testcontainers with the built JAR baked in. 
+The container image tag tracks `solr.version` automatically (major version only, e.g. `solr:9` or `solr:10`), so `mvn verify -Dsolr.version=9.7.0 ...` tests against a matching Solr 9 container.
+
+# Derived automatically from solr.version (major version only)                                                                                                                                                                                                                                                                     
+mvn verify -Dsolr.version=9.7.0 -Dlucene.version=9.11.1 -Djava.version=17   # → solr:9                                                                                                                                                                                                                                             
+                                                                                                                                                                                                                                                                                                                                     
+# Or force an exact tag/image                                                                                                                                                                                                                                                                                                      
+mvn verify -Dsolr.docker.image=solr:9.10.1                                                                                                                                                                                                                                                                                         
+mvn verify -Dsolr.docker.image=myregistry/solr:9.7.0-custom  
 
 ## Usage
 

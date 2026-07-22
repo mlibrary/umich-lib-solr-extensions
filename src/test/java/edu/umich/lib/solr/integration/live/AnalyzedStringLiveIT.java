@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.solr.client.solrj.request.SolrQuery;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocumentList;
 import org.junit.jupiter.api.BeforeAll;
@@ -35,12 +34,12 @@ class AnalyzedStringLiveIT extends AbstractLiveIT {
    */
   @Test
   void storedValuesAreNormalized() throws Exception {
-    QueryResponse resp = client.query(new SolrQuery("id:browse-1").setFields("author_browse"));
+    QueryResponse resp = client.query(new SolrTestQuery("id:browse-1").setFields("author_browse"));
     assertEquals("beatles",
         resp.getResults().get(0).getFieldValue("author_browse"),
         "Beatles should be stored as 'beatles'");
 
-    resp = client.query(new SolrQuery("id:browse-5").setFields("author_browse"));
+    resp = client.query(new SolrTestQuery("id:browse-5").setFields("author_browse"));
     assertEquals("bjork",
         resp.getResults().get(0).getFieldValue("author_browse"),
         "Bjork should be stored as 'bjork' (ASCII folded)");
@@ -54,7 +53,7 @@ class AnalyzedStringLiveIT extends AbstractLiveIT {
     // Normalized order: aerosmith, beatles, bjork, rolling stones, zz top
     // [bjork TO rolling stones] should return bjork and rolling stones
     QueryResponse resp = client.query(
-        new SolrQuery("author_browse:[bjork TO \"rolling stones\"]").setRows(10));
+        new SolrTestQuery("author_browse:[bjork TO \"rolling stones\"]").setRows(10));
     List<String> ids = idsOf(resp);
     assertEquals(2, ids.size(), "Expected 2 docs in range [bjork TO rolling stones]");
     assert ids.contains("browse-3") : "rolling stones should be in range";
@@ -68,7 +67,7 @@ class AnalyzedStringLiveIT extends AbstractLiveIT {
   void openLowerBoundRange() throws Exception {
     // aerosmith and beatles are <= beatles
     QueryResponse resp = client.query(
-        new SolrQuery("author_browse:[* TO beatles]").setRows(10));
+        new SolrTestQuery("author_browse:[* TO beatles]").setRows(10));
     List<String> ids = idsOf(resp);
     assertEquals(2, ids.size(), "Expected 2 docs with author_browse <= beatles");
     assert ids.contains("browse-1") : "beatles should be included";
@@ -82,7 +81,7 @@ class AnalyzedStringLiveIT extends AbstractLiveIT {
   void openUpperBoundRange() throws Exception {
     // rolling stones and zz top are >= rolling stones
     QueryResponse resp = client.query(
-        new SolrQuery("author_browse:[\"rolling stones\" TO *]").setRows(10));
+        new SolrTestQuery("author_browse:[\"rolling stones\" TO *]").setRows(10));
     List<String> ids = idsOf(resp);
     assertEquals(2, ids.size(), "Expected 2 docs with author_browse >= rolling stones");
     assert ids.contains("browse-3") : "rolling stones should be included";

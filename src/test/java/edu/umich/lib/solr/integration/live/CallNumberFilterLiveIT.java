@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.solr.client.solrj.request.SolrQuery;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -52,7 +51,7 @@ class CallNumberFilterLiveIT extends AbstractLiveIT {
     // user-facing call-number form. The query analyzer normalizes it to the
     // same sort key, then matches the indexed keyword token exactly.
     // Quote to defeat the query parser's whitespace splitting.
-    SolrQuery q = new SolrQuery("callnumber_lc:\"PS3537.A832 B6 1948\"").setFields("id");
+    SolrTestQuery q = new SolrTestQuery("callnumber_lc:\"PS3537.A832 B6 1948\"").setFields("id");
     List<String> ids = idsOf(client.query(q));
     assertTrue(ids.contains("cn-1"), () -> "expected cn-1 in " + ids);
   }
@@ -60,7 +59,7 @@ class CallNumberFilterLiveIT extends AbstractLiveIT {
   @Test
   void lcSortKey_leftAnchoredPrefix_findsDocument() throws Exception {
     // Left-anchored prefix search against the sort-key form.
-    SolrQuery q = new SolrQuery("callnumber_lc:ps43537*").setFields("id");
+    SolrTestQuery q = new SolrTestQuery("callnumber_lc:ps43537*").setFields("id");
     List<String> ids = idsOf(client.query(q));
     assertTrue(ids.contains("cn-1"), () -> "expected cn-1 in " + ids);
   }
@@ -68,10 +67,10 @@ class CallNumberFilterLiveIT extends AbstractLiveIT {
   @Test
   void lcSortKey_letterPrefix_findsAllLcDocuments() throws Exception {
     // "qa*" should match cn-3 ("qa276.73 ..."); "ps*" should match cn-1.
-    List<String> qaIds = idsOf(client.query(new SolrQuery("callnumber_lc:qa*").setFields("id")));
+    List<String> qaIds = idsOf(client.query(new SolrTestQuery("callnumber_lc:qa*").setFields("id")));
     assertTrue(qaIds.contains("cn-3"), () -> "expected cn-3 in " + qaIds);
 
-    List<String> psIds = idsOf(client.query(new SolrQuery("callnumber_lc:ps*").setFields("id")));
+    List<String> psIds = idsOf(client.query(new SolrTestQuery("callnumber_lc:ps*").setFields("id")));
     assertTrue(psIds.contains("cn-1"), () -> "expected cn-1 in " + psIds);
   }
 
@@ -85,7 +84,7 @@ class CallNumberFilterLiveIT extends AbstractLiveIT {
 
   @Test
   void deweySortKey_exactMatch_findsDocument() throws Exception {
-    SolrQuery q = new SolrQuery("callnumber_dewey:\"813.54 SAL\"").setFields("id");
+    SolrTestQuery q = new SolrTestQuery("callnumber_dewey:\"813.54 SAL\"").setFields("id");
     List<String> ids = idsOf(client.query(q));
     assertTrue(ids.contains("cn-2"), () -> "expected cn-2 in " + ids);
   }
@@ -94,7 +93,7 @@ class CallNumberFilterLiveIT extends AbstractLiveIT {
   void deweySortKey_leftAnchoredPrefix_findsDocument() throws Exception {
     // Three-digit prefix is an acceptable truncated key for Dewey, but the
     // indexed term is the full collation key. Prefix-match against that.
-    SolrQuery q = new SolrQuery("callnumber_dewey:813*").setFields("id");
+    SolrTestQuery q = new SolrTestQuery("callnumber_dewey:813*").setFields("id");
     List<String> ids = idsOf(client.query(q));
     assertTrue(ids.contains("cn-2"), () -> "expected cn-2 in " + ids);
   }
@@ -110,14 +109,14 @@ class CallNumberFilterLiveIT extends AbstractLiveIT {
   void anyCallNumber_routesLcInputToLcSortKey() throws Exception {
     // Supply the user-facing call-number form; the query analyzer normalizes
     // it to the same sort key as indexing.
-    SolrQuery q = new SolrQuery("callnumber_any:\"PS3537.A832 B6 1948\"").setFields("id");
+    SolrTestQuery q = new SolrTestQuery("callnumber_any:\"PS3537.A832 B6 1948\"").setFields("id");
     List<String> ids = idsOf(client.query(q));
     assertTrue(ids.contains("cn-1"), () -> "expected cn-1 in " + ids);
   }
 
   @Test
   void anyCallNumber_routesDeweyInputToDeweySortKey() throws Exception {
-    SolrQuery q = new SolrQuery("callnumber_any:\"813.54 SAL\"").setFields("id");
+    SolrTestQuery q = new SolrTestQuery("callnumber_any:\"813.54 SAL\"").setFields("id");
     List<String> ids = idsOf(client.query(q));
     assertTrue(ids.contains("cn-2"), () -> "expected cn-2 in " + ids);
   }
@@ -126,7 +125,7 @@ class CallNumberFilterLiveIT extends AbstractLiveIT {
   void allFixturesIndexedAsSingleKeywordTokens() throws Exception {
     // Sanity check: every fixture document is present (the filter did not
     // drop tokens silently). Three docs, one query.
-    QueryResponse resp = client.query(new SolrQuery("*:*").setFields("id").setRows(10));
+    QueryResponse resp = client.query(new SolrTestQuery("*:*").setFields("id").setRows(10));
     List<String> ids = idsOf(resp);
     assertEquals(3, ids.size(), () -> "expected 3 fixture docs, got " + ids);
     assertTrue(ids.contains("cn-1") && ids.contains("cn-2") && ids.contains("cn-3"),

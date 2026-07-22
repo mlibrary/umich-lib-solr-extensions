@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.solr.client.solrj.request.SolrQuery;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrInputDocument;
@@ -54,8 +53,8 @@ class CallNumberSortLiveIT extends AbstractLiveIT {
             .collect(Collectors.toList());
     }
 
-    private QueryResponse sortQuery(String field, SolrQuery.ORDER order) throws Exception {
-        return client.query(new SolrQuery("*:*")
+    private QueryResponse sortQuery(String field, SolrTestQuery.Order order) throws Exception {
+        return client.query(new SolrTestQuery("*:*")
             .setFields("id", "callnumber_sort", "callnumber_sortable")
             .addSort(field, order)
             .setRows(100));
@@ -72,8 +71,8 @@ class CallNumberSortLiveIT extends AbstractLiveIT {
         @Test
         @DisplayName("LC call numbers sort ascending by classification order")
         void lcAscending() throws Exception {
-            QueryResponse resp = client.query(new SolrQuery("id:sort-lc-*")
-                .setFields("id").addSort("callnumber_sort", SolrQuery.ORDER.asc).setRows(50));
+            QueryResponse resp = client.query(new SolrTestQuery("id:sort-lc-*")
+                .setFields("id").addSort("callnumber_sort", SolrTestQuery.Order.asc).setRows(50));
             // A1 < PS3537 < QA76 < ZZ999
             assertEquals(List.of("sort-lc-a", "sort-lc-b", "sort-lc-c", "sort-lc-d"), idsOf(resp));
         }
@@ -81,16 +80,16 @@ class CallNumberSortLiveIT extends AbstractLiveIT {
         @Test
         @DisplayName("LC call numbers sort descending")
         void lcDescending() throws Exception {
-            QueryResponse resp = client.query(new SolrQuery("id:sort-lc-*")
-                .setFields("id").addSort("callnumber_sort", SolrQuery.ORDER.desc).setRows(50));
+            QueryResponse resp = client.query(new SolrTestQuery("id:sort-lc-*")
+                .setFields("id").addSort("callnumber_sort", SolrTestQuery.Order.desc).setRows(50));
             assertEquals(List.of("sort-lc-d", "sort-lc-c", "sort-lc-b", "sort-lc-a"), idsOf(resp));
         }
 
         @Test
         @DisplayName("Dewey call numbers sort ascending by class number")
         void deweyAscending() throws Exception {
-            QueryResponse resp = client.query(new SolrQuery("id:sort-dewey-*")
-                .setFields("id").addSort("callnumber_sort", SolrQuery.ORDER.asc).setRows(50));
+            QueryResponse resp = client.query(new SolrTestQuery("id:sort-dewey-*")
+                .setFields("id").addSort("callnumber_sort", SolrTestQuery.Order.asc).setRows(50));
             // 100 < 813.54 < 999.9
             assertEquals(List.of("sort-dewey-a", "sort-dewey-b", "sort-dewey-c"), idsOf(resp));
         }
@@ -104,8 +103,8 @@ class CallNumberSortLiveIT extends AbstractLiveIT {
             // sort-lc-b    = "PS3537..." → full key starting with PS
             // Expected ascending: A-trunc, A1, PS-trunc, PS3537…
             QueryResponse resp = client.query(
-                new SolrQuery("id:sort-trunc-a OR id:sort-trunc-b OR id:sort-lc-a OR id:sort-lc-b")
-                    .setFields("id").addSort("callnumber_sort", SolrQuery.ORDER.asc).setRows(50));
+                new SolrTestQuery("id:sort-trunc-a OR id:sort-trunc-b OR id:sort-lc-a OR id:sort-lc-b")
+                    .setFields("id").addSort("callnumber_sort", SolrTestQuery.Order.asc).setRows(50));
             List<String> ids = idsOf(resp);
             int idxTruncA = ids.indexOf("sort-trunc-a");
             int idxLcA    = ids.indexOf("sort-lc-a");
@@ -127,10 +126,10 @@ class CallNumberSortLiveIT extends AbstractLiveIT {
         @Test
         @DisplayName("produces the same sort order as callnumber_sort for LC call numbers")
         void sameOrderAsParentForLC() throws Exception {
-            List<String> bySortKey  = idsOf(client.query(new SolrQuery("id:sort-lc-*")
-                .setFields("id").addSort("callnumber_sort",     SolrQuery.ORDER.asc).setRows(50)));
-            List<String> bySortable = idsOf(client.query(new SolrQuery("id:sort-lc-*")
-                .setFields("id").addSort("callnumber_sortable", SolrQuery.ORDER.asc).setRows(50)));
+            List<String> bySortKey  = idsOf(client.query(new SolrTestQuery("id:sort-lc-*")
+                .setFields("id").addSort("callnumber_sort",     SolrTestQuery.Order.asc).setRows(50)));
+            List<String> bySortable = idsOf(client.query(new SolrTestQuery("id:sort-lc-*")
+                .setFields("id").addSort("callnumber_sortable", SolrTestQuery.Order.asc).setRows(50)));
             assertEquals(bySortKey, bySortable,
                 "callnumber_sortable should produce identical ordering to callnumber_sort");
         }
@@ -138,7 +137,7 @@ class CallNumberSortLiveIT extends AbstractLiveIT {
         @Test
         @DisplayName("stores the original display value (not the normalised sort key)")
         void storesOriginalDisplayValue() throws Exception {
-            QueryResponse resp = client.query(new SolrQuery("id:sort-lc-b")
+            QueryResponse resp = client.query(new SolrTestQuery("id:sort-lc-b")
                 .setFields("callnumber_sortable").setRows(1));
             SolrDocument doc = resp.getResults().get(0);
             String stored = (String) doc.getFieldValue("callnumber_sortable");
@@ -149,8 +148,8 @@ class CallNumberSortLiveIT extends AbstractLiveIT {
         @Test
         @DisplayName("Dewey call numbers sort ascending via callnumber_sortable")
         void deweyAscending() throws Exception {
-            QueryResponse resp = client.query(new SolrQuery("id:sort-dewey-*")
-                .setFields("id").addSort("callnumber_sortable", SolrQuery.ORDER.asc).setRows(50));
+            QueryResponse resp = client.query(new SolrTestQuery("id:sort-dewey-*")
+                .setFields("id").addSort("callnumber_sortable", SolrTestQuery.Order.asc).setRows(50));
             assertEquals(List.of("sort-dewey-a", "sort-dewey-b", "sort-dewey-c"), idsOf(resp));
         }
     }
@@ -175,7 +174,7 @@ class CallNumberSortLiveIT extends AbstractLiveIT {
             client.commit();
 
             try {
-                QueryResponse resp = client.query(new SolrQuery("id:invalid-cn-test")
+                QueryResponse resp = client.query(new SolrTestQuery("id:invalid-cn-test")
                     .setFields("callnumber_sort", "callnumber_sortable").setRows(1));
                 assertEquals(1, resp.getResults().getNumFound());
                 SolrDocument result = resp.getResults().get(0);
@@ -194,7 +193,7 @@ class CallNumberSortLiveIT extends AbstractLiveIT {
         @Test
         @DisplayName("document with truncated-only LC key is indexed (allowTruncated=true)")
         void truncatedKeyIndexed() throws Exception {
-            QueryResponse resp = client.query(new SolrQuery("id:sort-trunc-b")
+            QueryResponse resp = client.query(new SolrTestQuery("id:sort-trunc-b")
                 .setFields("id", "callnumber_sort").setRows(1));
             assertEquals(1, resp.getResults().getNumFound());
             assertNotNull(resp.getResults().get(0).getFieldValue("callnumber_sort"),

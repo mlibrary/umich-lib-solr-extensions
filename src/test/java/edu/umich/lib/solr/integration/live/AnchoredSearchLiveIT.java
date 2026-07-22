@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.solr.client.solrj.request.QueryRequest;
-import org.apache.solr.client.solrj.request.SolrQuery;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.params.MapSolrParams;
@@ -134,7 +133,7 @@ class AnchoredSearchLiveIT extends AbstractLiveIT {
   // -------------------------------------------------------------------------
 
   private QueryResponse query(String q) throws Exception {
-    SolrQuery sq = new SolrQuery(q);
+    SolrTestQuery sq = new SolrTestQuery(q);
     sq.setFields("id");
     sq.setRows(50);
     return client.query(sq);
