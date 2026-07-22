@@ -79,6 +79,7 @@
     </dependencies>
 
     <build>
+        <finalName>umich-solr-extensions</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
