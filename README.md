@@ -54,7 +54,7 @@ mvn clean package -DskipTests
 mvn clean package -Dsolr.version=9.7.0 -Dlucene.version=9.11.1 -Djava.version=17 -DskipTests
 ```
 
-Each build produces a single JAR (`target/umich-solr-extensions-*.jar`) compiled/targeted for the requested version — pick the Solr/Lucene version 
+Each build produces a single JAR (`target/umich-solr-extensions.jar`) compiled/targeted for the requested version — pick the Solr/Lucene version 
 pair that matches the Solr instance you're deploying to. Note that Lucene's major version must match Solr's (Solr 9.x embeds Lucene 9.x, Solr 10.x embeds Lucene 10.x).
 
 The live integration tests (`*LiveIT.java`, run via `mvn verify`, skipped by `-DskipTests`) boot a Solr container via Testcontainers with the built JAR baked in. 

@@ -17,10 +17,9 @@ DEST_DIR="${SOLR_HOME}/lib"
 mkdir -p "$DEST_DIR"
 
 # Remove stale copies
-rm -f "$DEST_DIR"/umich-solr-extensions-*.jar
+rm -f "$DEST_DIR"/umich-solr-extensions.jar
 
-for jar in "$SRC_DIR"/umich-solr-extensions-*.jar; do
-  [ -e "$jar" ] || { echo "init-libs: no umich-solr-extensions JAR found in $SRC_DIR; run 'mvn package -DskipTests' on the host first" >&2; exit 1; }
-  cp "$jar" "$DEST_DIR/"
-  echo "init-libs: copied $(basename "$jar") -> $DEST_DIR"
-done
+JAR="$SRC_DIR/umich-solr-extensions.jar"
+[ -e "$JAR" ] || { echo "init-libs: no umich-solr-extensions JAR found in $SRC_DIR; run 'mvn package -DskipTests' on the host first" >&2; exit 1; }
+cp "$JAR" "$DEST_DIR/"
+echo "init-libs: copied $(basename "$JAR") -> $DEST_DIR"
