@@ -23,32 +23,38 @@
     </properties>
 
     <dependencies>
-        <!-- Lucene -->
+        <!-- Lucene: supplied by the Solr runtime at deploy time, not bundled -->
         <dependency>
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-core</artifactId>
             <version>${lucene.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-analysis-common</artifactId>
             <version>${lucene.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-queries</artifactId>
             <version>${lucene.version}</version>
+            <scope>provided</scope>
         </dependency>
-        <!-- Solr -->
+        <!-- Solr: supplied by the Solr runtime at deploy time, not bundled -->
         <dependency>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-core</artifactId>
             <version>${solr.version}</version>
+            <scope>provided</scope>
         </dependency>
+        <!-- solr-solrj ships org.apache.solr.common.* (e.g. SolrException), used directly by main sources -->
         <dependency>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-solrj</artifactId>
             <version>${solr.version}</version>
+            <scope>provided</scope>
         </dependency>
         <!-- Logging -->
         <dependency>

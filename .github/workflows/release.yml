@@ -22,7 +22,10 @@ jobs:
 
       - name: Build
         # Targeting Solr 9 — the only HathiTrust index using Solr 10 (ptsearch) does not use custom JARs
-        run: mvn clean package -Dsolr.version=9.7.0 -Dlucene.version=9.11.1 -Djava.version=17 -DskipTests
+        # To know the compatible Solr and lucene version you must check
+        # http://localhost:8983/solr/admin/info/system on the image you used
+        # For example, for the image solr:9.10.1, "solr-spec-version":"9.10.1" and "lucene-spec-version":"9.12.3"
+        run: mvn clean package -Dsolr.version=9.10.1 -Dlucene.version=9.12.3 -Djava.version=17 -DskipTests
 
       - name: Publish release
         uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2

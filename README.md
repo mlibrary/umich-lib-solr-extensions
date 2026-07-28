@@ -51,21 +51,22 @@ Maven lets us override any property via -D on the command line regardless of its
 mvn clean package -DskipTests
 
 # Solr 9.x / Java 17
-mvn clean package -Dsolr.version=9.7.0 -Dlucene.version=9.11.1 -Djava.version=17 -DskipTests
+mvn clean package -Dsolr.version=9.10.1 -Dlucene.version=9.12.3 -Djava.version=17 -DskipTests
 ```
 
 Each build produces a single JAR (`target/umich-solr-extensions.jar`) compiled/targeted for the requested version — pick the Solr/Lucene version 
-pair that matches the Solr instance you're deploying to. Note that Lucene's major version must match Solr's (Solr 9.x embeds Lucene 9.x, Solr 10.x embeds Lucene 10.x).
-
+pair that matches the Solr instance you're deploying to. Solr does **not** pin `lucene-core` to a version matching its own release number (e.g.
+`solr-core:9.10.1` actually depends on `lucene-core:9.12.3`, and `solr-core:10.0.0` depends on `lucene-core:10.3.2`) — don't guess `lucene.version`
+from `solr.version`. Look up the exact pinned version in the after choose the Solr image you will use accessing to http://localhost:9033/solr/admin/info/system.
 The live integration tests (`*LiveIT.java`, run via `mvn verify`, skipped by `-DskipTests`) boot a Solr container via Testcontainers with the built JAR baked in. 
-The container image tag tracks `solr.version` automatically (major version only, e.g. `solr:9` or `solr:10`), so `mvn verify -Dsolr.version=9.7.0 ...` tests against a matching Solr 9 container.
+The container image tag tracks `solr.version` automatically (major version only, e.g. `solr:9` or `solr:10`), so `mvn verify -Dsolr.version=9.10.1 ...` tests against a matching Solr 9 container.
 
 # Derived automatically from solr.version (major version only)                                                                                                                                                                                                                                                                     
-mvn verify -Dsolr.version=9.7.0 -Dlucene.version=9.11.1 -Djava.version=17   # → solr:9                                                                                                                                                                                                                                             
+mvn verify -Dsolr.version=9.10.1 -Dlucene.version=9.12.3 -Djava.version=17   # → solr:9                                                                                                                                                                                                                                             
                                                                                                                                                                                                                                                                                                                                      
 # Or force an exact tag/image                                                                                                                                                                                                                                                                                                      
 mvn verify -Dsolr.docker.image=solr:9.10.1                                                                                                                                                                                                                                                                                         
-mvn verify -Dsolr.docker.image=myregistry/solr:9.7.0-custom  
+mvn verify -Dsolr.docker.image=myregistry/solr:9.10.1-custom  
 
 ## Usage
 
